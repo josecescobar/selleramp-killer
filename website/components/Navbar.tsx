@@ -2,7 +2,9 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Logo } from './Logo';
+import { useAuth } from '@/lib/auth-context';
 
 const NAV_LINKS = [
   { label: 'Features', href: '/features' },
@@ -13,6 +15,13 @@ const NAV_LINKS = [
 
 export function Navbar() {
   const [open, setOpen] = useState(false);
+  const { user, logout } = useAuth();
+  const router = useRouter();
+
+  function handleLogout() {
+    logout();
+    router.push('/');
+  }
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-bg/80 backdrop-blur-lg border-b border-divider">
@@ -32,15 +41,40 @@ export function Navbar() {
           ))}
         </div>
 
-        {/* Desktop CTA */}
-        <a
-          href="https://chrome.google.com/webstore"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="hidden md:inline-flex btn-gradient text-white text-sm font-semibold px-5 py-2 rounded-lg"
-        >
-          Install on Chrome
-        </a>
+        {/* Desktop auth / CTA */}
+        <div className="hidden md:flex items-center gap-3">
+          {user ? (
+            <>
+              <Link
+                href="/dashboard"
+                className="text-text-muted text-sm font-medium hover:text-text-primary transition-colors"
+              >
+                Dashboard
+              </Link>
+              <button
+                onClick={handleLogout}
+                className="btn-outline text-text-primary text-sm font-semibold px-4 py-2 rounded-lg"
+              >
+                Log Out
+              </button>
+            </>
+          ) : (
+            <>
+              <Link
+                href="/login"
+                className="text-text-muted text-sm font-medium hover:text-text-primary transition-colors"
+              >
+                Log In
+              </Link>
+              <Link
+                href="/signup"
+                className="btn-gradient text-white text-sm font-semibold px-5 py-2 rounded-lg"
+              >
+                Sign Up
+              </Link>
+            </>
+          )}
+        </div>
 
         {/* Mobile hamburger */}
         <button
@@ -73,14 +107,40 @@ export function Navbar() {
               {link.label}
             </Link>
           ))}
-          <a
-            href="https://chrome.google.com/webstore"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="btn-gradient text-white text-sm font-semibold px-5 py-2 rounded-lg text-center"
-          >
-            Install on Chrome
-          </a>
+          {user ? (
+            <>
+              <Link
+                href="/dashboard"
+                onClick={() => setOpen(false)}
+                className="text-text-muted text-sm font-medium hover:text-text-primary transition-colors"
+              >
+                Dashboard
+              </Link>
+              <button
+                onClick={() => { handleLogout(); setOpen(false); }}
+                className="btn-outline text-text-primary text-sm font-semibold px-5 py-2 rounded-lg text-center"
+              >
+                Log Out
+              </button>
+            </>
+          ) : (
+            <>
+              <Link
+                href="/login"
+                onClick={() => setOpen(false)}
+                className="text-text-muted text-sm font-medium hover:text-text-primary transition-colors"
+              >
+                Log In
+              </Link>
+              <Link
+                href="/signup"
+                onClick={() => setOpen(false)}
+                className="btn-gradient text-white text-sm font-semibold px-5 py-2 rounded-lg text-center"
+              >
+                Sign Up
+              </Link>
+            </>
+          )}
         </div>
       )}
     </nav>
