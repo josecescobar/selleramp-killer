@@ -27,15 +27,16 @@ export function AlertRow({ icon, label, status, detail }: AlertRowProps) {
         alignItems: 'center',
         gap: 8,
         padding: '7px 10px',
-        background: cfg.bg,
+        background: t.card,
         borderRadius: 6,
         border: `1px solid ${t.cardBorder}`,
+        borderLeft: `3px solid ${cfg.color}`,
       }}
     >
       <span style={{ fontSize: 14 }}>{icon}</span>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: 11, fontWeight: 600, color: t.text }}>{label}</div>
-        <div style={{ fontSize: 10, color: t.textDim }}>{detail}</div>
+        <div style={{ fontSize: 10, color: t.textDim, lineHeight: 1.5 }}>{detail}</div>
       </div>
       <span
         style={{
@@ -46,7 +47,7 @@ export function AlertRow({ icon, label, status, detail }: AlertRowProps) {
           padding: '2px 6px',
           borderRadius: 4,
           background: cfg.bg,
-          border: `1px solid ${cfg.color}30`,
+          border: `1px solid ${cfg.color}50`,
         }}
       >
         {cfg.text}
