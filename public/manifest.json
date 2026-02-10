@@ -1,0 +1,76 @@
+{
+  "manifest_version": 3,
+  "name": "SourceTool — Sourcing Analysis",
+  "version": "0.1.0",
+  "description": "AI-powered sourcing analysis for Amazon and eBay sellers",
+  "permissions": [
+    "storage",
+    "unlimitedStorage",
+    "sidePanel",
+    "alarms",
+    "scripting",
+    "activeTab",
+    "offscreen"
+  ],
+  "host_permissions": [
+    "https://*.amazon.com/*",
+    "https://*.amazon.co.uk/*",
+    "https://*.amazon.ca/*",
+    "https://*.amazon.de/*",
+    "https://*.amazon.fr/*",
+    "https://*.amazon.it/*",
+    "https://*.amazon.es/*",
+    "https://*.amazon.co.jp/*",
+    "https://*.amazon.com.au/*",
+    "https://*.amazon.in/*",
+    "https://*.amazon.com.mx/*",
+    "https://*.ebay.com/*",
+    "https://*.ebay.co.uk/*",
+    "https://api.rainforestapi.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://*.amazon.com/dp/*",
+        "https://*.amazon.com/*/dp/*",
+        "https://*.amazon.com/gp/product/*",
+        "https://*.amazon.co.uk/dp/*",
+        "https://*.amazon.co.uk/*/dp/*",
+        "https://*.amazon.ca/dp/*",
+        "https://*.amazon.ca/*/dp/*",
+        "https://*.amazon.de/dp/*",
+        "https://*.amazon.de/*/dp/*",
+        "https://*.amazon.fr/dp/*",
+        "https://*.amazon.fr/*/dp/*",
+        "https://*.amazon.it/dp/*",
+        "https://*.amazon.it/*/dp/*",
+        "https://*.amazon.es/dp/*",
+        "https://*.amazon.es/*/dp/*",
+        "https://*.ebay.com/itm/*",
+        "https://*.ebay.co.uk/itm/*"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "side_panel": {
+    "default_path": "src/sidepanel/index.html"
+  },
+  "action": {
+    "default_title": "SourceTool",
+    "default_icon": {
+      "16": "icons/icon-16.svg",
+      "48": "icons/icon-48.svg",
+      "128": "icons/icon-128.svg"
+    }
+  },
+  "icons": {
+    "16": "icons/icon-16.svg",
+    "48": "icons/icon-48.svg",
+    "128": "icons/icon-128.svg"
+  }
+}
