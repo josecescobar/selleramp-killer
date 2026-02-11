@@ -20,9 +20,29 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 const USERS_KEY = 'sourcetool_users';
 const SESSION_KEY = 'sourcetool_session';
+const SEED_KEY = 'sourcetool_seeded';
+
+const DEMO_USER = {
+  name: 'Jose Escobar',
+  email: 'demo@sourcetool.app',
+  password: 'sourcetool',
+  createdAt: '2026-02-01T00:00:00.000Z',
+};
+
+function seedDemoUser() {
+  if (typeof window === 'undefined') return;
+  if (localStorage.getItem(SEED_KEY)) return;
+  const users = JSON.parse(localStorage.getItem(USERS_KEY) || '{}');
+  if (!users[DEMO_USER.email]) {
+    users[DEMO_USER.email] = DEMO_USER;
+    localStorage.setItem(USERS_KEY, JSON.stringify(users));
+  }
+  localStorage.setItem(SEED_KEY, '1');
+}
 
 function getStoredUsers(): Record<string, { name: string; email: string; password: string; createdAt: string }> {
   if (typeof window === 'undefined') return {};
+  seedDemoUser();
   try {
     return JSON.parse(localStorage.getItem(USERS_KEY) || '{}');
   } catch {
