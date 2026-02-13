@@ -73,7 +73,7 @@ export default function DashboardPage() {
       </div>
 
       <div className="border-t border-divider pt-4 flex items-center justify-between text-xs text-text-dim">
-        <a href="/privacy" className="hover:underline">Privacy Policy</a>
+        <Link href="/privacy" className="hover:underline">Privacy Policy</Link>
         <span>v1.0.0</span>
       </div>
     </div>
