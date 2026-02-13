@@ -10,7 +10,9 @@ export default function DashboardLayout({
 }) {
   return (
     <ProtectedRoute>
-      <DashboardShell>{children}</DashboardShell>
+      <div className="dashboard-light">
+        <DashboardShell>{children}</DashboardShell>
+      </div>
     </ProtectedRoute>
   );
 }
