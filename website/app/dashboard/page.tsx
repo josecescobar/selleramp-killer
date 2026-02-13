@@ -2,14 +2,16 @@
 
 import { useState, FormEvent } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 export default function DashboardPage() {
+  const router = useRouter();
   const [query, setQuery] = useState('');
 
   function handleSearch(e: FormEvent) {
     e.preventDefault();
     if (!query.trim()) return;
-    alert(`Search for: ${query}\n\nProduct analysis will be available when connected to the extension API.`);
+    router.push(`/dashboard/result?q=${encodeURIComponent(query.trim())}`);
   }
 
   return (
@@ -41,21 +43,33 @@ export default function DashboardPage() {
         </button>
       </form>
 
-      <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm mb-8">
-        <Link href="/dashboard/settings" className="text-accent hover:underline">
-          Settings
-        </Link>
-        <Link href="/dashboard/history" className="text-accent hover:underline">
-          History
-        </Link>
-        <a
-          href="https://chrome.google.com/webstore"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-accent hover:underline"
-        >
-          Chrome Web Store
-        </a>
+      <div className="space-y-2 text-sm text-text-muted mb-8">
+        <p>
+          You can now see Keepa charts on your search results page, switch it on in your{' '}
+          <Link href="/dashboard/settings" className="text-accent hover:underline">
+            SAS settings
+          </Link>
+          .
+        </p>
+        <p>
+          View your{' '}
+          <Link href="/dashboard/history" className="text-accent hover:underline">
+            SAS History
+          </Link>
+          .
+        </p>
+        <p>
+          To get the Mobile Apps or Chrome Extension visit the appropriate{' '}
+          <a
+            href="https://chrome.google.com/webstore"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-accent hover:underline"
+          >
+            App Store
+          </a>
+          .
+        </p>
       </div>
 
       <div className="border-t border-divider pt-4 flex items-center justify-between text-xs text-text-dim">

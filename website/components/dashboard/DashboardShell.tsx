@@ -28,7 +28,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   function handleNavSearch(e: FormEvent) {
     e.preventDefault();
     if (!navQuery.trim()) return;
-    alert(`Search for: ${navQuery}\n\nProduct analysis will be available when connected to the extension API.`);
+    router.push(`/dashboard/result?q=${encodeURIComponent(navQuery.trim())}`);
   }
 
   function handleLogout() {
@@ -74,14 +74,42 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         <div className="flex items-center gap-1 shrink-0">
           <Link
             href="/dashboard/history"
-            className="text-sm text-text-primary hover:text-accent transition-colors px-2 py-1"
+            className="flex items-center gap-1 text-sm text-text-primary hover:text-accent transition-colors px-2 py-1"
           >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
+            </svg>
             History
           </Link>
-          <NavDropdown label="Sheets" items={sheetsItems} />
-          <NavDropdown label="Help" items={helpItems} />
           <NavDropdown
-            label={<>My Account{user?.name ? ` - ${user.name}` : ''}</>}
+            label={
+              <span className="flex items-center gap-1">
+                <span className="w-4 h-4 rounded-sm bg-[#0f9d58] text-white text-[10px] font-bold flex items-center justify-center leading-none">G</span>
+                Sheets
+              </span>
+            }
+            items={sheetsItems}
+          />
+          <NavDropdown
+            label={
+              <span className="flex items-center gap-1">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10" /><path d="M12 16v-4" /><path d="M12 8h.01" />
+                </svg>
+                Help
+              </span>
+            }
+            items={helpItems}
+          />
+          <NavDropdown
+            label={
+              <span className="flex items-center gap-1">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
+                </svg>
+                My Account{user?.name ? ` - ${user.name}` : ''}
+              </span>
+            }
             items={accountItems}
           />
         </div>

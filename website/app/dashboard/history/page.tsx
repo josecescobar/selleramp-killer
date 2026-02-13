@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useHistory, HistoryEntry } from '@/lib/history';
 
 export default function HistoryPage() {
@@ -117,34 +118,39 @@ export default function HistoryPage() {
 
 function HistoryRow({ entry, even }: { entry: HistoryEntry; even: boolean }) {
   return (
-    <div className={`flex items-center gap-4 px-4 py-3 ${even ? 'bg-card' : 'bg-surface'}`}>
-      {/* Thumbnail placeholder */}
-      <div className="w-[60px] h-[60px] bg-surface border border-card-border flex items-center justify-center text-text-dim text-xs shrink-0">
-        IMG
-      </div>
-
-      {/* Product info */}
-      <div className="flex-1 min-w-0">
-        <div className="text-text-primary text-sm font-bold truncate">{entry.title}</div>
-        <div className="text-text-dim text-xs flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-0.5">
-          <span>ASIN: {entry.asin}</span>
-          {entry.upc && <span>UPC: {entry.upc}</span>}
+    <div className={`flex items-center gap-4 px-4 py-3 ${even ? 'bg-card' : 'bg-surface'} hover:bg-accent-glow cursor-pointer transition-colors`}>
+      <Link
+        href={`/dashboard/result?q=${encodeURIComponent(entry.asin)}`}
+        className="flex items-center gap-4 flex-1 min-w-0"
+      >
+        {/* Thumbnail placeholder */}
+        <div className="w-[60px] h-[60px] bg-surface border border-card-border flex items-center justify-center text-text-dim text-xs shrink-0">
+          IMG
         </div>
-      </div>
 
-      {/* Timestamp */}
-      <div className="text-text-dim text-xs text-right shrink-0">
-        {new Date(entry.timestamp).toLocaleDateString('en-US', {
-          month: 'short',
-          day: 'numeric',
-          year: 'numeric',
-        })}
-        <br />
-        {new Date(entry.timestamp).toLocaleTimeString('en-US', {
-          hour: 'numeric',
-          minute: '2-digit',
-        })}
-      </div>
+        {/* Product info */}
+        <div className="flex-1 min-w-0">
+          <div className="text-text-primary text-sm font-bold truncate">{entry.title}</div>
+          <div className="text-text-dim text-xs flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-0.5">
+            <span>ASIN: {entry.asin}</span>
+            {entry.upc && <span>UPC: {entry.upc}</span>}
+          </div>
+        </div>
+
+        {/* Timestamp */}
+        <div className="text-text-dim text-xs text-right shrink-0">
+          {new Date(entry.timestamp).toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+          })}
+          <br />
+          {new Date(entry.timestamp).toLocaleTimeString('en-US', {
+            hour: 'numeric',
+            minute: '2-digit',
+          })}
+        </div>
+      </Link>
 
       {/* External link icon */}
       <a
@@ -153,6 +159,7 @@ function HistoryRow({ entry, even }: { entry: HistoryEntry; even: boolean }) {
         rel="noopener noreferrer"
         className="text-text-dim hover:text-accent transition-colors shrink-0"
         title="View on Amazon"
+        onClick={(e) => e.stopPropagation()}
       >
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
           <path d="M11 7.5V11.5C11 12.05 10.55 12.5 10 12.5H2.5C1.95 12.5 1.5 12.05 1.5 11.5V4C1.5 3.45 1.95 3 2.5 3H6.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
