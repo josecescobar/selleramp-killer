@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { useTheme } from '../theme/ThemeContext';
 import { SectionHeader } from '../components/SectionHeader';
 import { EbayCredentialsSetup } from '../components/EbayCredentialsSetup';
@@ -14,6 +15,23 @@ export function EbayTab({ data }: EbayTabProps) {
   const { tokens: t } = useTheme();
   const { ebayData, loading, error, hasCredentials, refetch } =
     useEbaySearch(data);
+
+  // Read user's buy price from session storage (set in OverviewTab)
+  const asin = data.product.asin;
+  const [userBuyCents, setUserBuyCents] = useState<number | null>(null);
+  useEffect(() => {
+    const key = `session:buyPrice:${asin}`;
+    chrome.storage.session.get(key, (result) => {
+      setUserBuyCents((result[key] as number) ?? null);
+    });
+    const handler = (changes: { [key: string]: chrome.storage.StorageChange }, area: string) => {
+      if (area === 'session' && key in changes) {
+        setUserBuyCents((changes[key].newValue as number) ?? null);
+      }
+    };
+    chrome.storage.onChanged.addListener(handler);
+    return () => chrome.storage.onChanged.removeListener(handler);
+  }, [asin]);
 
   // No credentials — show setup
   if (!hasCredentials) {
@@ -167,10 +185,18 @@ export function EbayTab({ data }: EbayTabProps) {
   }
 
   const { priceStats, profitEstimate } = ebayData;
-  const amazonProfit = data.profitFba.profit;
-  const amazonRoi = data.profitFba.roi;
+  const amazonProfit = userBuyCents != null
+    ? data.profitFba.sellPrice - userBuyCents - data.profitFba.fees.totalFees
+    : data.profitFba.profit;
+  const amazonRoi = userBuyCents != null && userBuyCents > 0
+    ? Math.round((amazonProfit / userBuyCents) * 100)
+    : data.profitFba.roi;
   const ebayProfit = profitEstimate.profitCents;
   const ebayRoi = profitEstimate.roi;
+  // eBay profit at user's sourcing cost (buy at user's cost, sell on eBay at median)
+  const ebayAtUserCost = userBuyCents != null
+    ? priceStats.medianCents - userBuyCents - Math.round(priceStats.medianCents * 0.1325) - 30
+    : null;
 
   return (
     <div
@@ -255,6 +281,14 @@ export function EbayTab({ data }: EbayTabProps) {
             {formatPercent(ebayRoi)} ROI &middot;{' '}
             {formatCurrency(priceStats.medianCents)} median
           </div>
+          {ebayAtUserCost != null && (
+            <div style={{ fontSize: 10, color: t.textDim, marginTop: 2 }}>
+              At your cost:{' '}
+              <span style={{ color: ebayAtUserCost > 0 ? t.green : t.red, fontWeight: 600 }}>
+                {formatCurrency(ebayAtUserCost)}
+              </span>
+            </div>
+          )}
         </div>
       </div>
 

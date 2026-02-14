@@ -25,11 +25,22 @@ export function OverviewTab({ data }: OverviewTabProps) {
     (baseProfit.sellPrice / 100).toFixed(2),
   );
 
-  // Reset inputs when product changes
+  // Reset inputs when product changes; restore from session storage if available
   useEffect(() => {
+    const asin = data.product.asin;
     setBuyInput((baseProfit.buyPrice / 100).toFixed(2));
     setSellInput((baseProfit.sellPrice / 100).toFixed(2));
-  }, [data.product.asin, baseProfit.buyPrice, baseProfit.sellPrice]);
+    chrome.storage.session.get(
+      [`session:buyPrice:${asin}`, `session:sellPrice:${asin}`],
+      (result) => {
+        const savedBuy = result[`session:buyPrice:${asin}`] as number | undefined;
+        const savedSell = result[`session:sellPrice:${asin}`] as number | undefined;
+        if (savedBuy != null) setBuyInput((savedBuy / 100).toFixed(2));
+        if (savedSell != null) setSellInput((savedSell / 100).toFixed(2));
+      },
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data.product.asin]);
 
   // Recalculate all metrics from edited prices
   const { profitCents, roi, margin, maxCost, fees, sellPriceCents, buyPriceCents } = useMemo(() => {
@@ -195,8 +206,9 @@ export function OverviewTab({ data }: OverviewTabProps) {
               onChange={(e) => setBuyInput(e.target.value)}
               onBlur={() => {
                 const parsed = parseFloat(buyInput);
-                if (isNaN(parsed) || parsed < 0) setBuyInput('0.00');
-                else setBuyInput(parsed.toFixed(2));
+                const cents = isNaN(parsed) || parsed < 0 ? 0 : Math.round(parsed * 100);
+                setBuyInput((cents / 100).toFixed(2));
+                chrome.storage.session.set({ [`session:buyPrice:${data.product.asin}`]: cents });
               }}
               style={{
                 width: '100%',
@@ -246,8 +258,9 @@ export function OverviewTab({ data }: OverviewTabProps) {
               onChange={(e) => setSellInput(e.target.value)}
               onBlur={() => {
                 const parsed = parseFloat(sellInput);
-                if (isNaN(parsed) || parsed < 0) setSellInput('0.00');
-                else setSellInput(parsed.toFixed(2));
+                const cents = isNaN(parsed) || parsed < 0 ? 0 : Math.round(parsed * 100);
+                setSellInput((cents / 100).toFixed(2));
+                chrome.storage.session.set({ [`session:sellPrice:${data.product.asin}`]: cents });
               }}
               style={{
                 width: '100%',
