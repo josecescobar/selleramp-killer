@@ -11,6 +11,7 @@ export const CACHE_TTL = {
   BSR: 60 * 60 * 1000,
   FEES: 4 * 60 * 60 * 1000,
   RESTRICTIONS: 6 * 60 * 60 * 1000,
+  EBAY_SEARCH: 30 * 60 * 1000,
 } as const;
 
 export const SCORE_THRESHOLDS = {

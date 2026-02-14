@@ -3,6 +3,7 @@ import type { DealScore } from './deal';
 import type { ProfitCalculation } from './fees';
 import type { Offer, BuyBoxInfo } from './offers';
 import type { Alert } from './alerts';
+import type { EbaySearchResult } from './ebay';
 
 // --- Analysis Result (central data contract) ---
 
@@ -65,16 +66,42 @@ export interface GetApiKeyStatusRequest {
   type: 'GET_API_KEY_STATUS';
 }
 
+export interface SearchEbayRequest {
+  type: 'SEARCH_EBAY';
+  query: string;
+  amazonPriceCents: number;
+  asin: string;
+}
+
+export interface SetEbayCredentialsRequest {
+  type: 'SET_EBAY_CREDENTIALS';
+  clientId: string;
+  clientSecret: string;
+}
+
+export interface GetEbayCredentialsStatusRequest {
+  type: 'GET_EBAY_CREDENTIALS_STATUS';
+}
+
 export type ExtensionMessage =
   | AnalyzeProductRequest
   | GetCachedProductRequest
   | OpenSidePanelRequest
   | KeepAliveRequest
   | SetApiKeyRequest
-  | GetApiKeyStatusRequest;
+  | GetApiKeyStatusRequest
+  | SearchEbayRequest
+  | SetEbayCredentialsRequest
+  | GetEbayCredentialsStatusRequest;
 
 export interface AnalyzeProductResponse {
   success: boolean;
   data?: AnalysisResult;
+  error?: string;
+}
+
+export interface SearchEbayResponse {
+  success: boolean;
+  data?: EbaySearchResult;
   error?: string;
 }

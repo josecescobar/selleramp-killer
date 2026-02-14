@@ -19,10 +19,3 @@ export interface ProfitCalculation {
   maxCost: number;
 }
 
-export interface EbayFees {
-  finalValueFee: number;
-  finalValueFeePercent: number;
-  processingFee: number;
-  promotedListingFee?: number;
-  totalFees: number;
-}

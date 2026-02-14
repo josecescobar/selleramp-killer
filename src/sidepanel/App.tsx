@@ -198,7 +198,7 @@ export function App() {
             {activeTab === 'offers' && <OffersTab data={analysis.data} />}
             {activeTab === 'alerts' && <AlertsTab data={analysis.data} />}
             {activeTab === 'history' && <HistoryTab data={analysis.data} />}
-            {activeTab === 'ebay' && <EbayTab />}
+            {activeTab === 'ebay' && <EbayTab data={analysis.data} />}
           </>
         )}
       </div>
