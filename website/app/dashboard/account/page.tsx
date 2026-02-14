@@ -115,7 +115,7 @@ function DetailsTab({ user }: { user: { name: string; email: string; createdAt: 
                 type="text"
                 value={nameVal}
                 onChange={(e) => setNameVal(e.target.value)}
-                className="flex-1 bg-card border border-card-border px-3 py-1.5 text-sm text-text-primary focus:outline-none focus:border-accent transition-colors"
+                className="flex-1 bg-card border border-card-border px-3 py-1.5 text-sm text-text-primary focus:outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors"
               />
               <button
                 type="submit"
@@ -132,7 +132,7 @@ function DetailsTab({ user }: { user: { name: string; email: string; createdAt: 
                 type="email"
                 value={emailVal}
                 onChange={(e) => setEmailVal(e.target.value)}
-                className="flex-1 bg-card border border-card-border px-3 py-1.5 text-sm text-text-primary focus:outline-none focus:border-accent transition-colors"
+                className="flex-1 bg-card border border-card-border px-3 py-1.5 text-sm text-text-primary focus:outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors"
               />
               <button
                 type="submit"

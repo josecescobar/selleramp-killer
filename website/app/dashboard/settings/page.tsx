@@ -70,7 +70,7 @@ export default function SettingsPage() {
                   <select
                     value={settings.marketplace}
                     onChange={(e) => { updateSettings({ marketplace: e.target.value }); showSaved(); }}
-                    className="bg-card border border-card-border px-3 py-1.5 text-sm text-text-primary w-48"
+                    className="bg-card border border-card-border px-3 py-1.5 text-sm text-text-primary w-48 focus:outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-accent/40"
                   >
                     <option value="amazon.com">amazon.com</option>
                     <option value="amazon.co.uk">amazon.co.uk</option>
@@ -88,7 +88,7 @@ export default function SettingsPage() {
                       type="text"
                       value={settings.inboundFbaShipping}
                       onChange={(e) => { updateSettings({ inboundFbaShipping: e.target.value }); showSaved(); }}
-                      className="bg-card border border-card-border px-3 py-1.5 text-sm text-text-primary w-20 text-right"
+                      className="bg-card border border-card-border px-3 py-1.5 text-sm text-text-primary w-20 text-right focus:outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-accent/40"
                     />
                     <span className="text-text-dim text-sm">/ pound</span>
                   </div>
@@ -97,7 +97,7 @@ export default function SettingsPage() {
                   <select
                     value={settings.inboundPlacement}
                     onChange={(e) => { updateSettings({ inboundPlacement: e.target.value }); showSaved(); }}
-                    className="bg-card border border-card-border px-3 py-1.5 text-sm text-text-primary w-48"
+                    className="bg-card border border-card-border px-3 py-1.5 text-sm text-text-primary w-48 focus:outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-accent/40"
                   >
                     <option value="optimized">Amazon Optimized Splits</option>
                     <option value="minimal">Minimal Shipment Splits</option>
@@ -116,7 +116,7 @@ export default function SettingsPage() {
                       type="text"
                       value={settings.storageMonths}
                       onChange={(e) => { updateSettings({ storageMonths: e.target.value }); showSaved(); }}
-                      className="bg-card border border-card-border px-3 py-1.5 text-sm text-text-primary w-16 text-right"
+                      className="bg-card border border-card-border px-3 py-1.5 text-sm text-text-primary w-16 text-right focus:outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-accent/40"
                     />
                     <span className="text-text-dim text-sm">months</span>
                   </div>
@@ -145,7 +145,7 @@ export default function SettingsPage() {
                       type="text"
                       value={settings.minBsr}
                       onChange={(e) => { updateSettings({ minBsr: e.target.value }); showSaved(); }}
-                      className="bg-card border border-card-border px-3 py-1.5 text-sm text-text-primary w-16 text-right"
+                      className="bg-card border border-card-border px-3 py-1.5 text-sm text-text-primary w-16 text-right focus:outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-accent/40"
                     />
                     <span className="text-text-dim text-sm">%</span>
                   </div>
@@ -156,7 +156,7 @@ export default function SettingsPage() {
                       type="text"
                       value={settings.maxBsr}
                       onChange={(e) => { updateSettings({ maxBsr: e.target.value }); showSaved(); }}
-                      className="bg-card border border-card-border px-3 py-1.5 text-sm text-text-primary w-16 text-right"
+                      className="bg-card border border-card-border px-3 py-1.5 text-sm text-text-primary w-16 text-right focus:outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-accent/40"
                     />
                     <span className="text-text-dim text-sm">%</span>
                   </div>
@@ -168,7 +168,7 @@ export default function SettingsPage() {
                       type="text"
                       value={settings.minProfit}
                       onChange={(e) => { updateSettings({ minProfit: e.target.value }); showSaved(); }}
-                      className="bg-card border border-card-border px-3 py-1.5 text-sm text-text-primary w-20 text-right"
+                      className="bg-card border border-card-border px-3 py-1.5 text-sm text-text-primary w-20 text-right focus:outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-accent/40"
                     />
                   </div>
                 </SettingsRow>
@@ -178,7 +178,7 @@ export default function SettingsPage() {
                       type="text"
                       value={settings.minRoi}
                       onChange={(e) => { updateSettings({ minRoi: e.target.value }); showSaved(); }}
-                      className="bg-card border border-card-border px-3 py-1.5 text-sm text-text-primary w-16 text-right"
+                      className="bg-card border border-card-border px-3 py-1.5 text-sm text-text-primary w-16 text-right focus:outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-accent/40"
                     />
                     <span className="text-text-dim text-sm">%</span>
                   </div>
@@ -195,7 +195,7 @@ export default function SettingsPage() {
                       type="text"
                       value={settings.prepFee}
                       onChange={(e) => { updateSettings({ prepFee: e.target.value }); showSaved(); }}
-                      className="bg-card border border-card-border px-3 py-1.5 text-sm text-text-primary w-20 text-right"
+                      className="bg-card border border-card-border px-3 py-1.5 text-sm text-text-primary w-20 text-right focus:outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-accent/40"
                     />
                   </div>
                 </SettingsRow>
@@ -206,7 +206,7 @@ export default function SettingsPage() {
                       type="text"
                       value={settings.miscFee}
                       onChange={(e) => { updateSettings({ miscFee: e.target.value }); showSaved(); }}
-                      className="bg-card border border-card-border px-3 py-1.5 text-sm text-text-primary w-20 text-right"
+                      className="bg-card border border-card-border px-3 py-1.5 text-sm text-text-primary w-20 text-right focus:outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-accent/40"
                     />
                   </div>
                 </SettingsRow>
@@ -216,7 +216,7 @@ export default function SettingsPage() {
                       type="text"
                       value={settings.miscFeePercent}
                       onChange={(e) => { updateSettings({ miscFeePercent: e.target.value }); showSaved(); }}
-                      className="bg-card border border-card-border px-3 py-1.5 text-sm text-text-primary w-16 text-right"
+                      className="bg-card border border-card-border px-3 py-1.5 text-sm text-text-primary w-16 text-right focus:outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-accent/40"
                     />
                     <span className="text-text-dim text-sm">%</span>
                   </div>

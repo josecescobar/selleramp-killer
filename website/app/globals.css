@@ -12,6 +12,7 @@
   --color-accent-glow: rgba(59, 130, 246, 0.15);
   --color-purple: #8b5cf6;
   --color-divider: #252836;
+  --color-brand: #e67e22;
 }
 
 html {
@@ -90,7 +91,7 @@ body {
   --color-card-border: #dddddd;
   --color-text-primary: #333333;
   --color-text-muted: #555555;
-  --color-text-dim: #999999;
+  --color-text-dim: #777777;
   --color-accent: #337ab7;
   --color-accent-glow: rgba(51, 122, 183, 0.1);
   --color-purple: #337ab7;

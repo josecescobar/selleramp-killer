@@ -33,7 +33,7 @@ export default function DashboardPage() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Enter ASIN, UPC, ISBN, or keyword..."
-          className="flex-1 bg-card border border-card-border px-3 py-2 text-sm text-text-primary placeholder:text-text-dim focus:outline-none focus:border-accent transition-colors"
+          className="flex-1 bg-card border border-card-border px-3 py-2 text-sm text-text-primary placeholder:text-text-dim focus:outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors"
         />
         <button
           type="submit"

@@ -10,12 +10,11 @@ function DashboardLogo() {
   return (
     <Link href="/dashboard" className="flex items-center gap-2 shrink-0">
       <span
-        className="w-7 h-7 rounded flex items-center justify-center text-white font-bold text-sm"
-        style={{ backgroundColor: '#e67e22' }}
+        className="w-7 h-7 rounded flex items-center justify-center text-white font-bold text-sm bg-brand"
       >
         S
       </span>
-      <span className="text-text-primary font-semibold text-sm">SourceTool</span>
+      <span className="hidden sm:inline text-text-primary font-semibold text-sm">SourceTool</span>
     </Link>
   );
 }
@@ -60,13 +59,13 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         <DashboardLogo />
 
         {/* Center search */}
-        <form onSubmit={handleNavSearch} className="flex-1 flex justify-center mx-4">
+        <form onSubmit={handleNavSearch} className="flex-1 hidden sm:flex justify-center mx-4">
           <input
             type="text"
             value={navQuery}
             onChange={(e) => setNavQuery(e.target.value)}
             placeholder="Search Products"
-            className="w-full max-w-sm bg-card border border-card-border px-3 py-1.5 text-sm text-text-primary placeholder:text-text-dim focus:outline-none focus:border-accent transition-colors"
+            className="w-full max-w-sm bg-card border border-card-border px-3 py-1.5 text-sm text-text-primary placeholder:text-text-dim focus:outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-accent/40 transition-colors"
           />
         </form>
 
@@ -76,16 +75,16 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             href="/dashboard/history"
             className="flex items-center gap-1 text-sm text-text-primary hover:text-accent transition-colors px-2 py-1"
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
             </svg>
-            History
+            <span className="hidden md:inline">History</span>
           </Link>
           <NavDropdown
             label={
               <span className="flex items-center gap-1">
-                <span className="w-4 h-4 rounded-sm bg-[#0f9d58] text-white text-[10px] font-bold flex items-center justify-center leading-none">G</span>
-                Sheets
+                <span className="w-3.5 h-3.5 rounded-sm bg-[#0f9d58] text-white text-[10px] font-bold flex items-center justify-center leading-none">G</span>
+                <span className="hidden md:inline">Sheets</span>
               </span>
             }
             items={sheetsItems}
@@ -93,10 +92,10 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           <NavDropdown
             label={
               <span className="flex items-center gap-1">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="12" cy="12" r="10" /><path d="M12 16v-4" /><path d="M12 8h.01" />
                 </svg>
-                Help
+                <span className="hidden md:inline">Help</span>
               </span>
             }
             items={helpItems}
@@ -104,10 +103,10 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           <NavDropdown
             label={
               <span className="flex items-center gap-1">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
                 </svg>
-                My Account{user?.name ? ` - ${user.name}` : ''}
+                <span className="hidden md:inline">My Account{user?.name ? ` - ${user.name}` : ''}</span>
               </span>
             }
             items={accountItems}
