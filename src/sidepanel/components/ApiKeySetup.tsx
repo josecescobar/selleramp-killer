@@ -9,7 +9,9 @@ export function ApiKeySetup({ onSaved }: ApiKeySetupProps) {
   const { tokens: t } = useTheme();
   const [rfKey, setRfKey] = useState('');
   const [anthKey, setAnthKey] = useState('');
+  const [keepaKey, setKeepaKey] = useState('');
   const [hasAnthKey, setHasAnthKey] = useState(false);
+  const [hasKeepaKey, setHasKeepaKey] = useState(false);
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState<'idle' | 'saved' | 'error'>('idle');
 
@@ -20,10 +22,16 @@ export function ApiKeySetup({ onSaved }: ApiKeySetupProps) {
         setHasAnthKey(!!response?.hasKey);
       },
     );
+    chrome.runtime.sendMessage(
+      { type: 'GET_KEEPA_KEY_STATUS' },
+      (response) => {
+        setHasKeepaKey(!!response?.hasKey);
+      },
+    );
   }, []);
 
   const saveOne = (
-    type: 'SET_API_KEY' | 'SET_ANTHROPIC_KEY',
+    type: 'SET_API_KEY' | 'SET_ANTHROPIC_KEY' | 'SET_KEEPA_KEY',
     value: string,
   ): Promise<boolean> =>
     new Promise((resolve) => {
@@ -33,12 +41,13 @@ export function ApiKeySetup({ onSaved }: ApiKeySetupProps) {
     });
 
   const handleSave = async () => {
-    if (!rfKey.trim() && !anthKey.trim()) return;
+    if (!rfKey.trim() && !anthKey.trim() && !keepaKey.trim()) return;
     setSaving(true);
     setStatus('idle');
     let ok = true;
     if (rfKey.trim()) ok = ok && (await saveOne('SET_API_KEY', rfKey.trim()));
     if (anthKey.trim()) ok = ok && (await saveOne('SET_ANTHROPIC_KEY', anthKey.trim()));
+    if (keepaKey.trim()) ok = ok && (await saveOne('SET_KEEPA_KEY', keepaKey.trim()));
     setSaving(false);
     if (ok) {
       setStatus('saved');
@@ -50,11 +59,13 @@ export function ApiKeySetup({ onSaved }: ApiKeySetupProps) {
 
   const handleClear = () => {
     chrome.storage.local.remove(
-      ['settings:apiKey', 'settings:anthropicApiKey'],
+      ['settings:apiKey', 'settings:anthropicApiKey', 'settings:keepaApiKey'],
       () => {
         setRfKey('');
         setAnthKey('');
+        setKeepaKey('');
         setHasAnthKey(false);
+        setHasKeepaKey(false);
         setStatus('idle');
       },
     );
@@ -128,10 +139,26 @@ export function ApiKeySetup({ onSaved }: ApiKeySetupProps) {
         </div>
       </div>
 
+      <div>
+        <label style={labelStyle}>
+          Keepa API Key {hasKeepaKey ? '(saved)' : '(optional, for charts)'}
+        </label>
+        <input
+          type="password"
+          value={keepaKey}
+          onChange={(e) => setKeepaKey(e.target.value)}
+          placeholder={hasKeepaKey ? 'Replace existing key...' : 'Enter your Keepa API key...'}
+          style={inputStyle}
+        />
+        <div style={helperStyle}>
+          Powers price-history, BSR and offer-count charts on the History tab.
+        </div>
+      </div>
+
       <div style={{ display: 'flex', gap: 8 }}>
         <button
           onClick={handleSave}
-          disabled={(!rfKey.trim() && !anthKey.trim()) || saving}
+          disabled={(!rfKey.trim() && !anthKey.trim() && !keepaKey.trim()) || saving}
           style={{
             flex: 1,
             padding: '8px 0',
@@ -141,12 +168,15 @@ export function ApiKeySetup({ onSaved }: ApiKeySetupProps) {
             background:
               status === 'saved'
                 ? t.green
-                : !rfKey.trim() && !anthKey.trim()
+                : !rfKey.trim() && !anthKey.trim() && !keepaKey.trim()
                   ? t.textDim
                   : t.accent,
             border: 'none',
             borderRadius: 8,
-            cursor: (rfKey.trim() || anthKey.trim()) && !saving ? 'pointer' : 'default',
+            cursor:
+              (rfKey.trim() || anthKey.trim() || keepaKey.trim()) && !saving
+                ? 'pointer'
+                : 'default',
             fontFamily: 'inherit',
             opacity: saving ? 0.7 : 1,
           }}

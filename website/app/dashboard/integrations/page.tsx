@@ -4,24 +4,29 @@ import { useEffect, useState } from 'react';
 import { Fieldset } from '@/components/dashboard/Fieldset';
 import {
   getAnthropicKey,
+  getKeepaKey,
   getRainforestKey,
   setAnthropicKey,
+  setKeepaKey,
   setRainforestKey,
 } from '@/lib/batch-keys';
 
 export default function IntegrationsPage() {
   const [rfKey, setRfKey] = useState('');
   const [anthKey, setAnthKey] = useState('');
+  const [keepaKey, setKeepaKey2] = useState('');
   const [savedFlash, setSavedFlash] = useState(false);
 
   useEffect(() => {
     setRfKey(getRainforestKey() ?? '');
     setAnthKey(getAnthropicKey() ?? '');
+    setKeepaKey2(getKeepaKey() ?? '');
   }, []);
 
   const save = () => {
     setRainforestKey(rfKey.trim());
     setAnthropicKey(anthKey.trim());
+    setKeepaKey(keepaKey.trim());
     setSavedFlash(true);
     setTimeout(() => setSavedFlash(false), 1500);
   };
@@ -113,26 +118,25 @@ export default function IntegrationsPage() {
           </div>
         </Fieldset>
 
-        <Fieldset title="Keepa (coming soon)">
-          <p className="text-text-muted text-sm mb-4">
-            Access historical Amazon price and BSR data powered by Keepa for deeper product insights.
+        <Fieldset title="Keepa">
+          <p className="text-text-muted text-sm mb-3">
+            Powers price-history, BSR, and offer-count charts on the result page.
           </p>
-          <div className="flex items-center gap-3">
-            <button
-              disabled
-              className="text-sm font-medium px-4 py-2 border border-card-border rounded text-text-muted cursor-not-allowed"
-            >
-              Coming soon
-            </button>
-            <a
-              href="https://keepa.com/#!register"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-accent text-sm hover:underline"
-            >
-              Sign-up
-            </a>
-          </div>
+          <input
+            type="password"
+            value={keepaKey}
+            onChange={(e) => setKeepaKey2(e.target.value)}
+            placeholder="Keepa API key"
+            className="w-full bg-bg border border-card-border rounded px-3 py-2 text-sm text-text-primary font-mono"
+          />
+          <a
+            href="https://keepa.com/#!api"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-accent text-xs hover:underline mt-2 inline-block"
+          >
+            Get a key
+          </a>
         </Fieldset>
       </div>
     </div>

@@ -82,6 +82,15 @@ export interface GetAnthropicKeyStatusRequest {
   type: 'GET_ANTHROPIC_KEY_STATUS';
 }
 
+export interface SetKeepaKeyRequest {
+  type: 'SET_KEEPA_KEY';
+  apiKey: string;
+}
+
+export interface GetKeepaKeyStatusRequest {
+  type: 'GET_KEEPA_KEY_STATUS';
+}
+
 export interface GetProductHistoryRequest {
   type: 'GET_PRODUCT_HISTORY';
   asin: string;
@@ -96,6 +105,8 @@ export type ExtensionMessage =
   | GetApiKeyStatusRequest
   | SetAnthropicKeyRequest
   | GetAnthropicKeyStatusRequest
+  | SetKeepaKeyRequest
+  | GetKeepaKeyStatusRequest
   | GetProductHistoryRequest;
 
 export interface AnalyzeProductResponse {

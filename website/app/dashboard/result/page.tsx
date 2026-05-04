@@ -5,6 +5,12 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { CollapsiblePanel } from '@/components/dashboard/CollapsiblePanel';
 import { generateMockResult, MockResult } from '@/lib/mock-data';
 import { useHistory } from '@/lib/history';
+import { fetchKeepaProduct, type KeepaProductResult } from '@shared/api/keepa';
+import {
+  PriceHistoryChart,
+  buildKeepaSeries,
+} from '@shared/components/PriceHistoryChart';
+import { getKeepaKey } from '@/lib/batch-keys';
 
 function ResultPageContent() {
   const searchParams = useSearchParams();
@@ -100,7 +106,7 @@ function ResultPageContent() {
         {/* Center column */}
         <div className="col-span-full lg:col-span-6 space-y-3">
           <OffersPanel offers={data.offers} />
-          <ChartsPanel />
+          <ChartsPanel asin={data.product.asin} />
         </div>
 
         {/* Right column */}
@@ -359,34 +365,121 @@ function OffersPanel({ offers }: { offers: MockResult['offers'] }) {
 
 /* ─── Charts Panel ─── */
 
-function ChartsPanel() {
-  const legends = [
-    { color: '#ff9900', label: 'Amazon' },
-    { color: '#5cb85c', label: 'FBA' },
-    { color: '#5bc0de', label: 'FBM' },
-    { color: '#337ab7', label: 'New' },
-    { color: '#d9534f', label: 'Buy Box' },
-    { color: '#8b5cf6', label: 'Sales Rank' },
-  ];
+const ASIN_RE = /^B0[A-Z0-9]{8}$/i;
+const WINDOW_OPTIONS: { label: string; days: number | null }[] = [
+  { label: '1M', days: 30 },
+  { label: '3M', days: 90 },
+  { label: '6M', days: 180 },
+  { label: '1Y', days: 365 },
+  { label: 'ALL', days: null },
+];
+
+function ChartsPanel({ asin }: { asin: string }) {
+  const [keepa, setKeepa] = useState<KeepaProductResult | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [hasKey, setHasKey] = useState<boolean | null>(null);
+  const [windowDays, setWindowDays] = useState<number | null>(90);
+
+  const isRealAsin = ASIN_RE.test(asin);
+
+  useEffect(() => {
+    if (!isRealAsin) return;
+    const apiKey = getKeepaKey();
+    if (!apiKey) {
+      setHasKey(false);
+      return;
+    }
+    setHasKey(true);
+    setLoading(true);
+    setError(null);
+    fetchKeepaProduct({ apiKey, asin })
+      .then((data) => setKeepa(data))
+      .catch((err) =>
+        setError(err instanceof Error ? err.message : String(err)),
+      )
+      .finally(() => setLoading(false));
+  }, [asin, isRealAsin]);
+
+  const series = useMemo(
+    () =>
+      keepa
+        ? buildKeepaSeries({
+            amazon: keepa.series.amazon,
+            newPrice: keepa.series.newPrice,
+            buyBox: keepa.series.buyBox,
+            salesRank: keepa.series.salesRank,
+            offerCountNew: keepa.series.offerCountNew,
+          })
+        : [],
+    [keepa],
+  );
 
   return (
     <CollapsiblePanel
       title="Charts"
       icon={<span className="w-3 h-3 rounded-full inline-block" style={{ backgroundColor: '#d9534f' }} />}
     >
-      {/* Placeholder chart area */}
-      <div className="w-full h-48 bg-surface border border-card-border flex items-center justify-center text-text-dim text-xs mb-3">
-        Keepa / Price History Chart Placeholder
-      </div>
-      {/* Legend */}
-      <div className="flex flex-wrap gap-3">
-        {legends.map((l) => (
-          <span key={l.label} className="flex items-center gap-1 text-xs text-text-dim">
-            <span className="w-2.5 h-2.5 rounded-full inline-block" style={{ backgroundColor: l.color }} />
-            {l.label}
-          </span>
+      {/* Range selector */}
+      <div className="flex gap-1 mb-3">
+        {WINDOW_OPTIONS.map((opt) => (
+          <button
+            key={opt.label}
+            onClick={() => setWindowDays(opt.days)}
+            className={`flex-1 text-xs py-1 border ${windowDays === opt.days ? 'bg-accent text-white border-accent' : 'border-card-border text-text-muted hover:text-accent'}`}
+          >
+            {opt.label}
+          </button>
         ))}
       </div>
+
+      {!isRealAsin && (
+        <div className="w-full h-32 bg-surface border border-card-border flex items-center justify-center text-text-dim text-xs">
+          Search a real ASIN to load Keepa data.
+        </div>
+      )}
+
+      {isRealAsin && hasKey === false && (
+        <div className="w-full p-4 bg-surface border border-card-border text-text-dim text-xs">
+          Add a Keepa API key in{' '}
+          <a href="/dashboard/integrations" className="text-accent hover:underline">
+            Integrations
+          </a>{' '}
+          to load real price history.
+        </div>
+      )}
+
+      {isRealAsin && hasKey && loading && (
+        <div className="w-full h-32 bg-surface border border-card-border flex items-center justify-center text-text-dim text-xs">
+          Loading Keepa history...
+        </div>
+      )}
+
+      {isRealAsin && hasKey && error && !loading && (
+        <div className="w-full p-3 bg-surface border border-card-border text-red-500 text-xs">
+          {error}
+        </div>
+      )}
+
+      {isRealAsin && hasKey && keepa && !loading && (
+        <>
+          <PriceHistoryChart
+            series={series}
+            windowDays={windowDays}
+            width={520}
+            height={240}
+            axisColor="#e5e7eb"
+            textColor="#111827"
+            textColorDim="#9ca3af"
+            emptyMessage="No history points in this window."
+          />
+          {keepa.tokensLeft !== undefined && (
+            <div className="mt-2 text-[10px] text-text-dim text-right">
+              Keepa tokens left: {keepa.tokensLeft}
+            </div>
+          )}
+        </>
+      )}
     </CollapsiblePanel>
   );
 }

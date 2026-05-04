@@ -5,8 +5,20 @@ import { SectionHeader } from '../components/SectionHeader';
 import { formatCurrency, formatNumber } from '@shared/utils';
 import type { AnalysisResult } from '@shared/types/messages';
 import { usePriceHistory, type Period } from '../hooks/usePriceHistory';
+import { useKeepa } from '../hooks/useKeepa';
+import {
+  PriceHistoryChart,
+  buildKeepaSeries,
+} from '@shared/components/PriceHistoryChart';
 
 const PERIODS: Period[] = ['1M', '3M', '6M', '1Y', 'ALL'];
+const PERIOD_DAYS: Record<Period, number | null> = {
+  '1M': 30,
+  '3M': 90,
+  '6M': 180,
+  '1Y': 365,
+  ALL: null,
+};
 
 interface HistoryTabProps {
   data: AnalysisResult;
@@ -26,8 +38,19 @@ export function HistoryTab({ data, asin }: HistoryTabProps) {
   const { tokens: t } = useTheme();
   const { snapshots, filtered, priceStats, bsrStats, loading, period, setPeriod } =
     usePriceHistory(asin);
+  const keepa = useKeepa(asin);
 
   const hasChartData = filtered.length >= 2;
+  const hasKeepa = !!keepa.data;
+  const keepaSeries = keepa.data
+    ? buildKeepaSeries({
+        amazon: keepa.data.series.amazon,
+        newPrice: keepa.data.series.newPrice,
+        buyBox: keepa.data.series.buyBox,
+        salesRank: keepa.data.series.salesRank,
+        offerCountNew: keepa.data.series.offerCountNew,
+      })
+    : [];
 
   return (
     <div style={{ padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -55,8 +78,23 @@ export function HistoryTab({ data, asin }: HistoryTabProps) {
         ))}
       </div>
 
-      {/* Loading */}
-      {loading && (
+      {/* Keepa price-history chart (preferred) */}
+      {keepa.hasKey === false && (
+        <div
+          style={{
+            background: t.card,
+            border: `1px solid ${t.cardBorder}`,
+            borderRadius: 8,
+            padding: '12px',
+            fontSize: 11,
+            color: t.textMuted,
+            lineHeight: 1.5,
+          }}
+        >
+          Add a Keepa API key in settings to see real price-history, BSR, and offer-count charts.
+        </div>
+      )}
+      {keepa.loading && (
         <div
           style={{
             height: 80,
@@ -67,42 +105,62 @@ export function HistoryTab({ data, asin }: HistoryTabProps) {
             color: t.textMuted,
           }}
         >
-          Loading history...
+          Loading Keepa history...
         </div>
       )}
-
-      {/* Empty state */}
-      {!loading && !hasChartData && (
+      {keepa.error && !keepa.loading && (
         <div
           style={{
             background: t.card,
             border: `1px solid ${t.cardBorder}`,
             borderRadius: 8,
-            padding: '24px 12px',
-            textAlign: 'center',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: 6,
+            padding: '10px 12px',
+            fontSize: 11,
+            color: t.red,
           }}
         >
-          <div style={{ fontSize: 11, color: t.textMuted }}>
-            Price history will build over time
-          </div>
-          <div style={{ fontSize: 10, color: t.textDim }}>
-            {snapshots.length === 1
-              ? '1 snapshot recorded — charts appear after 2+ data points'
-              : 'Each analysis records a snapshot of price & BSR'}
-          </div>
+          {keepa.error}
         </div>
       )}
-
-      {/* Price History */}
-      {!loading && hasChartData && (
+      {hasKeepa && !keepa.loading && (
         <>
           <SectionHeader
             icon={'\u{1F4C8}'}
-            title="Price History"
+            title="Keepa History"
+            badge={
+              keepa.data?.tokensLeft !== undefined
+                ? `${keepa.data.tokensLeft} tokens left`
+                : undefined
+            }
+          />
+          <div
+            style={{
+              background: t.card,
+              border: `1px solid ${t.cardBorder}`,
+              borderRadius: 8,
+              padding: '10px 8px 8px',
+            }}
+          >
+            <PriceHistoryChart
+              series={keepaSeries}
+              windowDays={PERIOD_DAYS[period]}
+              width={310}
+              height={200}
+              axisColor={t.cardBorder}
+              textColor={t.text}
+              textColorDim={t.textDim}
+              emptyMessage="No history points in this window."
+            />
+          </div>
+        </>
+      )}
+
+      {/* Local snapshots as a secondary signal */}
+      {!loading && hasChartData && (
+        <>
+          <SectionHeader
+            icon={'\u{1F4CA}'}
+            title="Your Snapshots"
             badge={`${filtered.length} pts`}
           />
           <div
@@ -134,47 +192,43 @@ export function HistoryTab({ data, asin }: HistoryTabProps) {
               color={priceStats.changePct >= 0 ? t.green : t.red}
             />
           </div>
-        </>
-      )}
-
-      {/* BSR History */}
-      {!loading && hasChartData && (
-        <>
-          <SectionHeader
-            icon={'\u{1F4CA}'}
-            title="BSR History"
-            badge={data.bsr.category}
-          />
-          <div
-            style={{
-              background: t.card,
-              border: `1px solid ${t.cardBorder}`,
-              borderRadius: 8,
-              padding: '12px 8px',
-              display: 'flex',
-              justifyContent: 'center',
-            }}
-          >
-            <HistoryChart
-              data={filtered}
-              valueKey="bsr"
-              color={t.orange}
-              width={300}
-              height={120}
-              formatValue={(v) => formatNumber(Math.round(v))}
-            />
-          </div>
           <div style={{ display: 'flex', gap: 6 }}>
-            <MetricBox label="High" value={formatNumber(Math.round(bsrStats.high))} />
-            <MetricBox label="Low" value={formatNumber(Math.round(bsrStats.low))} />
-            <MetricBox label="Avg" value={formatNumber(Math.round(bsrStats.avg))} />
+            <MetricBox label="BSR High" value={formatNumber(Math.round(bsrStats.high))} />
+            <MetricBox label="BSR Low" value={formatNumber(Math.round(bsrStats.low))} />
+            <MetricBox label="BSR Avg" value={formatNumber(Math.round(bsrStats.avg))} />
             <MetricBox
-              label="Change"
+              label="BSR Δ"
               value={fmtChangePct(bsrStats.changePct)}
               color={bsrStats.changePct <= 0 ? t.green : t.red}
             />
           </div>
         </>
+      )}
+
+      {/* Empty state when neither source has data */}
+      {!loading && !hasChartData && !hasKeepa && !keepa.loading && keepa.hasKey !== false && (
+        <div
+          style={{
+            background: t.card,
+            border: `1px solid ${t.cardBorder}`,
+            borderRadius: 8,
+            padding: '24px 12px',
+            textAlign: 'center',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 6,
+          }}
+        >
+          <div style={{ fontSize: 11, color: t.textMuted }}>
+            Price history will build over time
+          </div>
+          <div style={{ fontSize: 10, color: t.textDim }}>
+            {snapshots.length === 1
+              ? '1 snapshot recorded — charts appear after 2+ data points'
+              : 'Each analysis records a snapshot of price & BSR'}
+          </div>
+        </div>
       )}
 
       {/* Current Snapshot */}
