@@ -5,7 +5,7 @@ import type {
   RainforestProductResponse,
   RainforestOffersResponse,
   RainforestSalesEstimationResponse,
-} from './rainforest-client';
+} from '@shared/api/rainforest';
 
 // --- Product Mapping ---
 

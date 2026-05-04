@@ -8,15 +8,18 @@ import { AlertsTab } from './tabs/AlertsTab';
 import { HistoryTab } from './tabs/HistoryTab';
 import { EbayTab } from './tabs/EbayTab';
 import { ApiKeySetup } from './components/ApiKeySetup';
+import { BatchScreen } from './batch/BatchScreen';
 import { useProductAnalysis } from './hooks/useProductAnalysis';
 
 export type TabId = 'overview' | 'offers' | 'alerts' | 'history' | 'ebay';
+export type AppMode = 'product' | 'batch';
 
 export function App() {
   const { tokens: t } = useTheme();
   const [activeTab, setActiveTab] = useState<TabId>('overview');
   const [expanded, setExpanded] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [mode, setMode] = useState<AppMode>('product');
   const analysis = useProductAnalysis();
 
   return (
@@ -33,8 +36,13 @@ export function App() {
         expanded={expanded}
         onToggleExpand={() => setExpanded(!expanded)}
         onOpenSettings={() => setShowSettings(!showSettings)}
+        mode={mode}
+        onToggleMode={() => {
+          setMode(mode === 'batch' ? 'product' : 'batch');
+          setShowSettings(false);
+        }}
       />
-      <TabBar activeTab={activeTab} onTabChange={setActiveTab} />
+      {mode === 'product' && <TabBar activeTab={activeTab} onTabChange={setActiveTab} />}
 
       <div
         style={{
@@ -52,8 +60,16 @@ export function App() {
           />
         )}
 
+        {/* Batch mode */}
+        {!showSettings && mode === 'batch' && (
+          <BatchScreen
+            onOpenSettings={() => setShowSettings(true)}
+            onSelectAsin={() => setMode('product')}
+          />
+        )}
+
         {/* API key missing state */}
-        {!showSettings && !analysis.hasApiKey && (
+        {!showSettings && mode === 'product' && !analysis.hasApiKey && (
           <div
             style={{
               padding: '40px 20px',
@@ -91,7 +107,7 @@ export function App() {
         )}
 
         {/* Loading state */}
-        {!showSettings && analysis.hasApiKey && analysis.loading && (
+        {!showSettings && mode === 'product' && analysis.hasApiKey && analysis.loading && (
           <div
             style={{
               padding: '40px 20px',
@@ -120,7 +136,7 @@ export function App() {
         )}
 
         {/* Error state */}
-        {!showSettings && analysis.error && !analysis.loading && (
+        {!showSettings && mode === 'product' && analysis.error && !analysis.loading && (
           <div
             style={{
               padding: '40px 20px',
@@ -167,6 +183,7 @@ export function App() {
 
         {/* No ASIN state */}
         {!showSettings &&
+          mode === 'product' &&
           analysis.hasApiKey &&
           !analysis.loading &&
           !analysis.error &&
@@ -192,7 +209,7 @@ export function App() {
           )}
 
         {/* Data loaded - show tabs */}
-        {!showSettings && analysis.data && !analysis.loading && !analysis.error && (
+        {!showSettings && mode === 'product' && analysis.data && !analysis.loading && !analysis.error && (
           <>
             {activeTab === 'overview' && <OverviewTab data={analysis.data} />}
             {activeTab === 'offers' && <OffersTab data={analysis.data} />}

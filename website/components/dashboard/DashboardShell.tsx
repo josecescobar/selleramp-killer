@@ -72,6 +72,15 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         {/* Right nav items */}
         <div className="flex items-center gap-1 shrink-0">
           <Link
+            href="/dashboard/batch"
+            className="flex items-center gap-1 text-sm text-text-primary hover:text-accent transition-colors px-2 py-1"
+          >
+            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /><rect x="14" y="14" width="7" height="7" />
+            </svg>
+            <span className="hidden md:inline">Batch</span>
+          </Link>
+          <Link
             href="/dashboard/history"
             className="flex items-center gap-1 text-sm text-text-primary hover:text-accent transition-colors px-2 py-1"
           >
