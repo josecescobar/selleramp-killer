@@ -10,6 +10,7 @@ import {
   PriceHistoryChart,
   buildKeepaSeries,
 } from '@shared/components/PriceHistoryChart';
+import { VariationsTable } from '@shared/components/VariationsTable';
 
 const PERIODS: Period[] = ['1M', '3M', '6M', '1Y', 'ALL'];
 const PERIOD_DAYS: Record<Period, number | null> = {
@@ -152,6 +153,48 @@ export function HistoryTab({ data, asin }: HistoryTabProps) {
               emptyMessage="No history points in this window."
             />
           </div>
+        </>
+      )}
+
+      {/* Variations */}
+      {hasKeepa && !keepa.loading && (
+        <>
+          <SectionHeader
+            icon={'\u{1F500}'}
+            title="Variations"
+            badge={
+              keepa.data?.variations.length
+                ? `${keepa.data.variations.length}`
+                : keepa.data?.parentAsin
+                  ? 'child'
+                  : undefined
+            }
+          />
+          {keepa.data?.parentAsin && (
+            <div
+              style={{
+                fontSize: 10,
+                color: t.textDim,
+                padding: '4px 8px',
+              }}
+            >
+              Child of{' '}
+              <span style={{ fontFamily: 'monospace', color: t.text }}>
+                {keepa.data.parentAsin}
+              </span>
+            </div>
+          )}
+          <VariationsTable
+            variations={keepa.data?.variations ?? []}
+            currentAsin={asin}
+            textColor={t.text}
+            textColorDim={t.textDim}
+            borderColor={t.cardBorder}
+            accentColor={t.accent}
+            highlightBackground={t.cardBorder}
+            rowBackground={t.card}
+            maxHeight={180}
+          />
         </>
       )}
 

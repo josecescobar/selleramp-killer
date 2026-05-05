@@ -5,12 +5,12 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { CollapsiblePanel } from '@/components/dashboard/CollapsiblePanel';
 import { generateMockResult, MockResult } from '@/lib/mock-data';
 import { useHistory } from '@/lib/history';
-import { fetchKeepaProduct, type KeepaProductResult } from '@shared/api/keepa';
 import {
   PriceHistoryChart,
   buildKeepaSeries,
 } from '@shared/components/PriceHistoryChart';
-import { getKeepaKey } from '@/lib/batch-keys';
+import { VariationsTable } from '@shared/components/VariationsTable';
+import { useKeepaResult, type KeepaResultState } from '@/lib/use-keepa';
 
 function ResultPageContent() {
   const searchParams = useSearchParams();
@@ -22,6 +22,7 @@ function ResultPageContent() {
   const [historyAdded, setHistoryAdded] = useState(false);
 
   const data = useMemo(() => (q ? generateMockResult(q) : null), [q]);
+  const keepa = useKeepaResult(data?.product.asin ?? '');
 
   // Add to history on mount if it looks like an ASIN
   useEffect(() => {
@@ -106,7 +107,8 @@ function ResultPageContent() {
         {/* Center column */}
         <div className="col-span-full lg:col-span-6 space-y-3">
           <OffersPanel offers={data.offers} />
-          <ChartsPanel asin={data.product.asin} />
+          <ChartsPanel keepa={keepa} />
+          <VariationsPanel keepa={keepa} onSelect={(asin) => router.push(`/dashboard/result?q=${encodeURIComponent(asin)}`)} />
         </div>
 
         {/* Right column */}
@@ -365,7 +367,6 @@ function OffersPanel({ offers }: { offers: MockResult['offers'] }) {
 
 /* ─── Charts Panel ─── */
 
-const ASIN_RE = /^B0[A-Z0-9]{8}$/i;
 const WINDOW_OPTIONS: { label: string; days: number | null }[] = [
   { label: '1M', days: 30 },
   { label: '3M', days: 90 },
@@ -374,45 +375,21 @@ const WINDOW_OPTIONS: { label: string; days: number | null }[] = [
   { label: 'ALL', days: null },
 ];
 
-function ChartsPanel({ asin }: { asin: string }) {
-  const [keepa, setKeepa] = useState<KeepaProductResult | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [hasKey, setHasKey] = useState<boolean | null>(null);
+function ChartsPanel({ keepa }: { keepa: KeepaResultState }) {
   const [windowDays, setWindowDays] = useState<number | null>(90);
-
-  const isRealAsin = ASIN_RE.test(asin);
-
-  useEffect(() => {
-    if (!isRealAsin) return;
-    const apiKey = getKeepaKey();
-    if (!apiKey) {
-      setHasKey(false);
-      return;
-    }
-    setHasKey(true);
-    setLoading(true);
-    setError(null);
-    fetchKeepaProduct({ apiKey, asin })
-      .then((data) => setKeepa(data))
-      .catch((err) =>
-        setError(err instanceof Error ? err.message : String(err)),
-      )
-      .finally(() => setLoading(false));
-  }, [asin, isRealAsin]);
 
   const series = useMemo(
     () =>
-      keepa
+      keepa.data
         ? buildKeepaSeries({
-            amazon: keepa.series.amazon,
-            newPrice: keepa.series.newPrice,
-            buyBox: keepa.series.buyBox,
-            salesRank: keepa.series.salesRank,
-            offerCountNew: keepa.series.offerCountNew,
+            amazon: keepa.data.series.amazon,
+            newPrice: keepa.data.series.newPrice,
+            buyBox: keepa.data.series.buyBox,
+            salesRank: keepa.data.series.salesRank,
+            offerCountNew: keepa.data.series.offerCountNew,
           })
         : [],
-    [keepa],
+    [keepa.data],
   );
 
   return (
@@ -433,13 +410,13 @@ function ChartsPanel({ asin }: { asin: string }) {
         ))}
       </div>
 
-      {!isRealAsin && (
+      {!keepa.isRealAsin && (
         <div className="w-full h-32 bg-surface border border-card-border flex items-center justify-center text-text-dim text-xs">
           Search a real ASIN to load Keepa data.
         </div>
       )}
 
-      {isRealAsin && hasKey === false && (
+      {keepa.isRealAsin && keepa.hasKey === false && (
         <div className="w-full p-4 bg-surface border border-card-border text-text-dim text-xs">
           Add a Keepa API key in{' '}
           <a href="/dashboard/integrations" className="text-accent hover:underline">
@@ -449,19 +426,19 @@ function ChartsPanel({ asin }: { asin: string }) {
         </div>
       )}
 
-      {isRealAsin && hasKey && loading && (
+      {keepa.isRealAsin && keepa.hasKey && keepa.loading && (
         <div className="w-full h-32 bg-surface border border-card-border flex items-center justify-center text-text-dim text-xs">
           Loading Keepa history...
         </div>
       )}
 
-      {isRealAsin && hasKey && error && !loading && (
+      {keepa.isRealAsin && keepa.hasKey && keepa.error && !keepa.loading && (
         <div className="w-full p-3 bg-surface border border-card-border text-red-500 text-xs">
-          {error}
+          {keepa.error}
         </div>
       )}
 
-      {isRealAsin && hasKey && keepa && !loading && (
+      {keepa.isRealAsin && keepa.hasKey && keepa.data && !keepa.loading && (
         <>
           <PriceHistoryChart
             series={series}
@@ -473,12 +450,68 @@ function ChartsPanel({ asin }: { asin: string }) {
             textColorDim="#9ca3af"
             emptyMessage="No history points in this window."
           />
-          {keepa.tokensLeft !== undefined && (
+          {keepa.data.tokensLeft !== undefined && (
             <div className="mt-2 text-[10px] text-text-dim text-right">
-              Keepa tokens left: {keepa.tokensLeft}
+              Keepa tokens left: {keepa.data.tokensLeft}
             </div>
           )}
         </>
+      )}
+    </CollapsiblePanel>
+  );
+}
+
+/* ─── Variations Panel ─── */
+
+function VariationsPanel({
+  keepa,
+  onSelect,
+}: {
+  keepa: KeepaResultState;
+  onSelect: (asin: string) => void;
+}) {
+  if (!keepa.isRealAsin || keepa.hasKey === false) return null;
+  const variations = keepa.data?.variations ?? [];
+  const parentAsin = keepa.data?.parentAsin;
+  const badge = variations.length
+    ? `${variations.length}`
+    : parentAsin
+      ? 'child'
+      : undefined;
+
+  return (
+    <CollapsiblePanel
+      title={badge ? `Variations (${badge})` : 'Variations'}
+      icon={<span className="w-3 h-3 rounded-full inline-block" style={{ backgroundColor: '#10b981' }} />}
+    >
+      {keepa.loading && (
+        <div className="text-text-dim text-xs">Loading variations...</div>
+      )}
+      {!keepa.loading && parentAsin && (
+        <div className="text-text-dim text-xs mb-2">
+          Child of{' '}
+          <button
+            type="button"
+            onClick={() => onSelect(parentAsin)}
+            className="font-mono text-accent hover:underline"
+          >
+            {parentAsin}
+          </button>
+        </div>
+      )}
+      {!keepa.loading && keepa.data && (
+        <VariationsTable
+          variations={variations}
+          currentAsin={keepa.data.asin}
+          onSelect={onSelect}
+          textColor="#111827"
+          textColorDim="#9ca3af"
+          borderColor="#e5e7eb"
+          accentColor="#2563eb"
+          highlightBackground="#eff6ff"
+          rowBackground="#ffffff"
+          maxHeight={260}
+        />
       )}
     </CollapsiblePanel>
   );

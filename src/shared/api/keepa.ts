@@ -37,11 +37,21 @@ export interface KeepaPoint {
   value: number;
 }
 
+export interface KeepaVariation {
+  asin: string;
+  /** Pretty-printed dimension string, e.g. "Color: Red, Size: M". */
+  attributes: string;
+}
+
 export interface KeepaProductResult {
   asin: string;
   title?: string;
   brand?: string;
   imageUrl?: string;
+  /** Set when this ASIN is a child variation; null/undefined for parents. */
+  parentAsin?: string | null;
+  /** Variation children (only populated when this ASIN is a parent). */
+  variations: KeepaVariation[];
   series: {
     amazon: KeepaPoint[];
     newPrice: KeepaPoint[];
@@ -64,15 +74,22 @@ export interface FetchKeepaOpts {
   signal?: AbortSignal;
 }
 
+interface RawKeepaVariation {
+  asin: string;
+  attributes?: Array<{ dimension?: string; value?: string }>;
+}
+
 interface RawKeepaResponse {
   tokensLeft?: number;
   tokensConsumed?: number;
   products?: Array<{
     asin: string;
+    parentAsin?: string | null;
     title?: string;
     brand?: string;
     imagesCSV?: string;
     csv?: Array<number[] | null>;
+    variations?: RawKeepaVariation[];
   }>;
   error?: { message: string; type: string };
 }
@@ -112,11 +129,21 @@ export async function fetchKeepaProduct(
   const csv = product.csv ?? [];
   const image = product.imagesCSV?.split(',')[0]?.trim();
 
+  const variations: KeepaVariation[] = (product.variations ?? []).map((v) => ({
+    asin: v.asin,
+    attributes: (v.attributes ?? [])
+      .filter((a) => a.dimension && a.value)
+      .map((a) => `${a.dimension}: ${a.value}`)
+      .join(', '),
+  }));
+
   return {
     asin: product.asin,
+    parentAsin: product.parentAsin ?? null,
     title: product.title,
     brand: product.brand,
     imageUrl: image ? `https://images-na.ssl-images-amazon.com/images/I/${image}` : undefined,
+    variations,
     series: {
       amazon: decodeSeries(csv[KEEPA_SERIES.AMAZON]),
       newPrice: decodeSeries(csv[KEEPA_SERIES.NEW]),
