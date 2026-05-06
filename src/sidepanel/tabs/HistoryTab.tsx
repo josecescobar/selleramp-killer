@@ -80,19 +80,33 @@ export function HistoryTab({ data, asin }: HistoryTabProps) {
       </div>
 
       {/* Keepa price-history chart (preferred) */}
-      {keepa.hasKey === false && (
+      {keepa.isDemo && (
         <div
           style={{
-            background: t.card,
-            border: `1px solid ${t.cardBorder}`,
-            borderRadius: 8,
-            padding: '12px',
-            fontSize: 11,
-            color: t.textMuted,
-            lineHeight: 1.5,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+            fontSize: 10,
+            color: t.yellow,
+            padding: '0 2px',
           }}
         >
-          Add a Keepa API key in settings to see real price-history, BSR, and offer-count charts.
+          <span
+            style={{
+              padding: '1px 5px',
+              background: 'rgba(234, 179, 8, 0.15)',
+              border: `1px solid ${t.yellow}`,
+              borderRadius: 3,
+              fontWeight: 700,
+              letterSpacing: 0.4,
+              textTransform: 'uppercase',
+            }}
+          >
+            Demo
+          </span>
+          <span style={{ color: t.textMuted }}>
+            Synthetic data — add a Keepa key in settings for real history.
+          </span>
         </div>
       )}
       {keepa.loading && (
@@ -249,7 +263,7 @@ export function HistoryTab({ data, asin }: HistoryTabProps) {
       )}
 
       {/* Empty state when neither source has data */}
-      {!loading && !hasChartData && !hasKeepa && !keepa.loading && keepa.hasKey !== false && (
+      {!loading && !hasChartData && !hasKeepa && !keepa.loading && (
         <div
           style={{
             background: t.card,

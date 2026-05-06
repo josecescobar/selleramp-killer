@@ -1,11 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
-import { fetchKeepaProduct, type KeepaProductResult } from '@shared/api/keepa';
+import {
+  fetchKeepaProduct,
+  generateMockKeepaProduct,
+  type KeepaProductResult,
+} from '@shared/api/keepa';
 
 interface KeepaState {
   data: KeepaProductResult | null;
   loading: boolean;
   error: string | null;
   hasKey: boolean | null;
+  isDemo: boolean;
 }
 
 const CACHE_TTL_MS = 60 * 60 * 1000;
@@ -49,6 +54,7 @@ export function useKeepa(asin: string | null): KeepaState & { refetch: () => voi
     loading: false,
     error: null,
     hasKey: null,
+    isDemo: false,
   });
   const lastAsin = useRef<string | null>(null);
   const lastFetchedAt = useRef<number>(0);
@@ -57,13 +63,19 @@ export function useKeepa(asin: string | null): KeepaState & { refetch: () => voi
     setState((s) => ({ ...s, loading: true, error: null }));
     const apiKey = await getKeepaKey();
     if (!apiKey) {
-      setState({ data: null, loading: false, error: null, hasKey: false });
+      setState({
+        data: generateMockKeepaProduct(targetAsin),
+        loading: false,
+        error: null,
+        hasKey: false,
+        isDemo: true,
+      });
       return;
     }
     if (!forceFresh) {
       const cached = await getCached(targetAsin);
       if (cached) {
-        setState({ data: cached, loading: false, error: null, hasKey: true });
+        setState({ data: cached, loading: false, error: null, hasKey: true, isDemo: false });
         return;
       }
     }
@@ -71,20 +83,21 @@ export function useKeepa(asin: string | null): KeepaState & { refetch: () => voi
       const data = await fetchKeepaProduct({ apiKey, asin: targetAsin });
       await setCached(targetAsin, data);
       lastFetchedAt.current = Date.now();
-      setState({ data, loading: false, error: null, hasKey: true });
+      setState({ data, loading: false, error: null, hasKey: true, isDemo: false });
     } catch (err) {
       setState({
         data: null,
         loading: false,
         error: err instanceof Error ? err.message : String(err),
         hasKey: true,
+        isDemo: false,
       });
     }
   };
 
   useEffect(() => {
     if (!asin) {
-      setState({ data: null, loading: false, error: null, hasKey: null });
+      setState({ data: null, loading: false, error: null, hasKey: null, isDemo: false });
       lastAsin.current = null;
       return;
     }

@@ -416,13 +416,18 @@ function ChartsPanel({ keepa }: { keepa: KeepaResultState }) {
         </div>
       )}
 
-      {keepa.isRealAsin && keepa.hasKey === false && (
-        <div className="w-full p-4 bg-surface border border-card-border text-text-dim text-xs">
-          Add a Keepa API key in{' '}
-          <a href="/dashboard/integrations" className="text-accent hover:underline">
-            Integrations
-          </a>{' '}
-          to load real price history.
+      {keepa.isDemo && (
+        <div className="mb-2 flex items-center gap-2 text-[10px] text-amber-600">
+          <span className="px-1.5 py-0.5 bg-amber-100 border border-amber-300 rounded font-semibold uppercase tracking-wide">
+            Demo
+          </span>
+          <span>
+            Synthetic data — add a Keepa API key in{' '}
+            <a href="/dashboard/integrations" className="text-accent hover:underline">
+              Integrations
+            </a>{' '}
+            to load real history.
+          </span>
         </div>
       )}
 
@@ -438,7 +443,7 @@ function ChartsPanel({ keepa }: { keepa: KeepaResultState }) {
         </div>
       )}
 
-      {keepa.isRealAsin && keepa.hasKey && keepa.data && !keepa.loading && (
+      {keepa.isRealAsin && keepa.data && !keepa.loading && (
         <>
           <PriceHistoryChart
             series={series}
@@ -470,7 +475,7 @@ function VariationsPanel({
   keepa: KeepaResultState;
   onSelect: (asin: string) => void;
 }) {
-  if (!keepa.isRealAsin || keepa.hasKey === false) return null;
+  if (!keepa.isRealAsin) return null;
   const variations = keepa.data?.variations ?? [];
   const parentAsin = keepa.data?.parentAsin;
   const badge = variations.length
@@ -484,6 +489,14 @@ function VariationsPanel({
       title={badge ? `Variations (${badge})` : 'Variations'}
       icon={<span className="w-3 h-3 rounded-full inline-block" style={{ backgroundColor: '#10b981' }} />}
     >
+      {keepa.isDemo && (
+        <div className="mb-2 flex items-center gap-2 text-[10px] text-amber-600">
+          <span className="px-1.5 py-0.5 bg-amber-100 border border-amber-300 rounded font-semibold uppercase tracking-wide">
+            Demo
+          </span>
+          <span>Synthetic variations.</span>
+        </div>
+      )}
       {keepa.loading && (
         <div className="text-text-dim text-xs">Loading variations...</div>
       )}

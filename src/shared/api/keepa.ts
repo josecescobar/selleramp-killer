@@ -173,3 +173,102 @@ function decodeSeries(raw: number[] | null | undefined): KeepaPoint[] {
   }
   return out;
 }
+
+// --- Demo data generation (used when no API key is configured) ---
+
+/**
+ * Deterministic synthetic Keepa response for a given ASIN. Produces ~90 days
+ * of daily samples for prices, BSR, and offer counts plus a handful of
+ * fake variations. Useful for visual review without consuming Keepa tokens.
+ */
+export function generateMockKeepaProduct(asin: string): KeepaProductResult {
+  const seed = hashString(asin);
+  const rand = mulberry32(seed);
+  const days = 90;
+  const now = Date.now();
+  const dayMs = 24 * 60 * 60 * 1000;
+
+  // Base levels seeded from ASIN so different products look different.
+  const basePriceCents = 1500 + Math.floor(rand() * 4500); // $15–$60
+  const baseRank = 1000 + Math.floor(rand() * 50_000);
+  const baseOffers = 3 + Math.floor(rand() * 12);
+
+  const amazon: KeepaPoint[] = [];
+  const newPrice: KeepaPoint[] = [];
+  const buyBox: KeepaPoint[] = [];
+  const salesRank: KeepaPoint[] = [];
+  const offerCountNew: KeepaPoint[] = [];
+
+  let pAmazon = basePriceCents;
+  let pNew = basePriceCents - 50 - Math.floor(rand() * 200);
+  let pBuyBox = pNew + Math.floor(rand() * 100);
+  let rank = baseRank;
+  let offers = baseOffers;
+
+  for (let i = days; i >= 0; i--) {
+    const ts = now - i * dayMs;
+    pAmazon = clamp(pAmazon + Math.round((rand() - 0.5) * 80), 200, 100_000);
+    pNew = clamp(pNew + Math.round((rand() - 0.5) * 100), 200, 100_000);
+    pBuyBox = clamp(pBuyBox + Math.round((rand() - 0.5) * 90), 200, 100_000);
+    rank = clamp(Math.round(rank * (1 + (rand() - 0.5) * 0.08)), 50, 2_000_000);
+    offers = clamp(offers + (rand() < 0.25 ? Math.round((rand() - 0.5) * 2) : 0), 1, 60);
+
+    // Insert a few intentional gaps to mimic real Keepa data sparsity.
+    if (rand() > 0.05) amazon.push({ ts, value: pAmazon });
+    if (rand() > 0.02) newPrice.push({ ts, value: pNew });
+    if (rand() > 0.1) buyBox.push({ ts, value: pBuyBox });
+    salesRank.push({ ts, value: rank });
+    if (i % 3 === 0) offerCountNew.push({ ts, value: offers });
+  }
+
+  const variations: KeepaVariation[] = [
+    { asin: mockAsin(asin, 1), attributes: 'Color: Black, Size: M' },
+    { asin: mockAsin(asin, 2), attributes: 'Color: Black, Size: L' },
+    { asin: mockAsin(asin, 3), attributes: 'Color: Red, Size: M' },
+    { asin: mockAsin(asin, 4), attributes: 'Color: Blue, Size: L' },
+  ];
+
+  return {
+    asin,
+    parentAsin: null,
+    title: `Demo product · ${asin}`,
+    brand: 'DemoBrand',
+    imageUrl: undefined,
+    variations,
+    series: { amazon, newPrice, buyBox, salesRank, offerCountNew },
+    tokensConsumed: 0,
+    tokensLeft: undefined,
+  };
+}
+
+function hashString(s: string): number {
+  let h = 2166136261 >>> 0;
+  for (let i = 0; i < s.length; i++) {
+    h = (h ^ s.charCodeAt(i)) >>> 0;
+    h = Math.imul(h, 16777619) >>> 0;
+  }
+  return h || 1;
+}
+
+function mulberry32(seed: number): () => number {
+  let s = seed >>> 0;
+  return () => {
+    s = (s + 0x6d2b79f5) >>> 0;
+    let t = s;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function clamp(v: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, v));
+}
+
+function mockAsin(parent: string, n: number): string {
+  // Replace the trailing two characters with a number-derived suffix so the
+  // result is still ASIN-shaped but distinguishable.
+  const stem = parent.slice(0, -2).toUpperCase();
+  const suffix = (n * 7).toString(36).toUpperCase().padStart(2, '0').slice(-2);
+  return (stem + suffix).slice(0, 10);
+}
