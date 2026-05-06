@@ -174,6 +174,57 @@ function decodeSeries(raw: number[] | null | undefined): KeepaPoint[] {
   return out;
 }
 
+// --- Price-history stats ---
+
+export interface KeepaPriceStats {
+  /** Lowest price in the window, in cents. null if no points. */
+  low: number | null;
+  /** Highest price in the window, in cents. null if no points. */
+  high: number | null;
+  /** Mean price across the window, in cents. null if no points. */
+  avg: number | null;
+  /** Most recent price in the window, in cents. null if no points. */
+  current: number | null;
+  /** Number of points the stats were computed from. */
+  count: number;
+}
+
+/**
+ * Computes price stats over the given window. Prefers the New series; falls
+ * back to Buy Box if New is empty. Window is in days; pass null for all data.
+ */
+export function computeKeepaPriceStats(
+  product: Pick<KeepaProductResult, 'series'>,
+  windowDays: number | null,
+): KeepaPriceStats {
+  const cutoff =
+    windowDays == null ? -Infinity : Date.now() - windowDays * 24 * 60 * 60 * 1000;
+  const source = product.series.newPrice.length
+    ? product.series.newPrice
+    : product.series.buyBox.length
+      ? product.series.buyBox
+      : product.series.amazon;
+  const inWindow = source.filter((p) => p.ts >= cutoff);
+  if (!inWindow.length) {
+    return { low: null, high: null, avg: null, current: null, count: 0 };
+  }
+  let sum = 0;
+  let low = Infinity;
+  let high = -Infinity;
+  for (const p of inWindow) {
+    sum += p.value;
+    if (p.value < low) low = p.value;
+    if (p.value > high) high = p.value;
+  }
+  return {
+    low,
+    high,
+    avg: Math.round(sum / inWindow.length),
+    current: inWindow[inWindow.length - 1].value,
+    count: inWindow.length,
+  };
+}
+
 // --- Demo data generation (used when no API key is configured) ---
 
 /**

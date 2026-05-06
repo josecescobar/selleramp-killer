@@ -11,6 +11,7 @@ import {
   buildKeepaSeries,
 } from '@shared/components/PriceHistoryChart';
 import { VariationsTable } from '@shared/components/VariationsTable';
+import { computeKeepaPriceStats } from '@shared/api/keepa';
 
 const PERIODS: Period[] = ['1M', '3M', '6M', '1Y', 'ALL'];
 const PERIOD_DAYS: Record<Period, number | null> = {
@@ -167,6 +168,21 @@ export function HistoryTab({ data, asin }: HistoryTabProps) {
               emptyMessage="No history points in this window."
             />
           </div>
+          {(() => {
+            const stats = computeKeepaPriceStats(keepa.data!, PERIOD_DAYS[period]);
+            if (!stats.count) return null;
+            const f = (c: number | null) =>
+              c == null ? '—' : `$${(c / 100).toFixed(2)}`;
+            const win = PERIOD_DAYS[period] == null ? 'All' : `${PERIOD_DAYS[period]}d`;
+            return (
+              <div style={{ display: 'flex', gap: 6 }}>
+                <MetricBox label={`${win} Low`} value={f(stats.low)} />
+                <MetricBox label={`${win} High`} value={f(stats.high)} />
+                <MetricBox label={`${win} Avg`} value={f(stats.avg)} />
+                <MetricBox label="Now" value={f(stats.current)} />
+              </div>
+            );
+          })()}
         </>
       )}
 

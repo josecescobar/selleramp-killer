@@ -10,6 +10,7 @@ import {
   buildKeepaSeries,
 } from '@shared/components/PriceHistoryChart';
 import { VariationsTable } from '@shared/components/VariationsTable';
+import { computeKeepaPriceStats } from '@shared/api/keepa';
 import { useKeepaResult, type KeepaResultState } from '@/lib/use-keepa';
 
 function ResultPageContent() {
@@ -455,6 +456,7 @@ function ChartsPanel({ keepa }: { keepa: KeepaResultState }) {
             textColorDim="#9ca3af"
             emptyMessage="No history points in this window."
           />
+          <KeepaStatsRow keepa={keepa} windowDays={windowDays} />
           {keepa.data.tokensLeft !== undefined && (
             <div className="mt-2 text-[10px] text-text-dim text-right">
               Keepa tokens left: {keepa.data.tokensLeft}
@@ -463,6 +465,46 @@ function ChartsPanel({ keepa }: { keepa: KeepaResultState }) {
         </>
       )}
     </CollapsiblePanel>
+  );
+}
+
+/* ─── Keepa Stats Row ─── */
+
+function KeepaStatsRow({
+  keepa,
+  windowDays,
+}: {
+  keepa: KeepaResultState;
+  windowDays: number | null;
+}) {
+  if (!keepa.data) return null;
+  const stats = computeKeepaPriceStats(keepa.data, windowDays);
+  if (!stats.count) return null;
+  const fmt = (cents: number | null) =>
+    cents == null ? '—' : `$${(cents / 100).toFixed(2)}`;
+  const label = windowDays == null ? 'All' : `${windowDays}d`;
+  const cells: { label: string; value: string }[] = [
+    { label: `${label} Low`, value: fmt(stats.low) },
+    { label: `${label} High`, value: fmt(stats.high) },
+    { label: `${label} Avg`, value: fmt(stats.avg) },
+    { label: 'Now', value: fmt(stats.current) },
+  ];
+  return (
+    <div className="mt-3 grid grid-cols-4 gap-2">
+      {cells.map((c) => (
+        <div
+          key={c.label}
+          className="border border-card-border px-2 py-1.5 bg-surface"
+        >
+          <div className="text-[10px] uppercase tracking-wide text-text-dim">
+            {c.label}
+          </div>
+          <div className="text-sm font-semibold text-text-primary tabular-nums">
+            {c.value}
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }
 
