@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Fieldset } from '@/components/dashboard/Fieldset';
 import {
   getAnthropicKey,
   getKeepaKey,
@@ -11,25 +10,94 @@ import {
   setRainforestKey,
 } from '@/lib/batch-keys';
 
+interface KeyCard {
+  id: 'rainforest' | 'anthropic' | 'keepa';
+  title: string;
+  blurb: string;
+  helpUrl: string;
+  helpLabel: string;
+  placeholder: string;
+}
+
+const CARDS: KeyCard[] = [
+  {
+    id: 'rainforest',
+    title: 'Rainforest API',
+    blurb: 'Product, offers, and BSR lookups for Amazon analysis and batch image processing.',
+    helpUrl: 'https://www.rainforestapi.com/',
+    helpLabel: 'rainforestapi.com',
+    placeholder: 'Rainforest API key',
+  },
+  {
+    id: 'anthropic',
+    title: 'Anthropic (Claude)',
+    blurb: 'Image batch processing — extracts ASINs / UPCs from photos and screenshots.',
+    helpUrl: 'https://console.anthropic.com/',
+    helpLabel: 'console.anthropic.com',
+    placeholder: 'Anthropic API key (sk-ant-…)',
+  },
+  {
+    id: 'keepa',
+    title: 'Keepa',
+    blurb: 'Price-history, BSR, offer-count charts and product variations on the result page.',
+    helpUrl: 'https://keepa.com/#!api',
+    helpLabel: 'keepa.com/#!api',
+    placeholder: 'Keepa API key',
+  },
+];
+
 export default function IntegrationsPage() {
-  const [rfKey, setRfKey] = useState('');
-  const [anthKey, setAnthKey] = useState('');
-  const [keepaKey, setKeepaKey2] = useState('');
+  const [values, setValues] = useState<Record<KeyCard['id'], string>>({
+    rainforest: '',
+    anthropic: '',
+    keepa: '',
+  });
+  const [saved, setSaved] = useState<Record<KeyCard['id'], boolean>>({
+    rainforest: false,
+    anthropic: false,
+    keepa: false,
+  });
   const [savedFlash, setSavedFlash] = useState(false);
 
   useEffect(() => {
-    setRfKey(getRainforestKey() ?? '');
-    setAnthKey(getAnthropicKey() ?? '');
-    setKeepaKey2(getKeepaKey() ?? '');
+    const next = {
+      rainforest: getRainforestKey() ?? '',
+      anthropic: getAnthropicKey() ?? '',
+      keepa: getKeepaKey() ?? '',
+    };
+    setValues(next);
+    setSaved({
+      rainforest: !!next.rainforest,
+      anthropic: !!next.anthropic,
+      keepa: !!next.keepa,
+    });
   }, []);
 
+  const update = (id: KeyCard['id'], v: string) =>
+    setValues((prev) => ({ ...prev, [id]: v }));
+
   const save = () => {
-    setRainforestKey(rfKey.trim());
-    setAnthropicKey(anthKey.trim());
-    setKeepaKey(keepaKey.trim());
+    setRainforestKey(values.rainforest.trim());
+    setAnthropicKey(values.anthropic.trim());
+    setKeepaKey(values.keepa.trim());
+    setSaved({
+      rainforest: !!values.rainforest.trim(),
+      anthropic: !!values.anthropic.trim(),
+      keepa: !!values.keepa.trim(),
+    });
     setSavedFlash(true);
     setTimeout(() => setSavedFlash(false), 1500);
   };
+
+  const isDirty = CARDS.some((c) => {
+    const stored =
+      c.id === 'rainforest'
+        ? getRainforestKey() ?? ''
+        : c.id === 'anthropic'
+          ? getAnthropicKey() ?? ''
+          : getKeepaKey() ?? '';
+    return values[c.id] !== stored;
+  });
 
   return (
     <div className="max-w-4xl mx-auto px-6 py-8">
@@ -40,104 +108,89 @@ export default function IntegrationsPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        <Fieldset title="Rainforest API">
-          <p className="text-text-muted text-sm mb-3">
-            Powers product, offers, and BSR lookups for Amazon analysis and batch image processing.
-          </p>
-          <input
-            type="password"
-            value={rfKey}
-            onChange={(e) => setRfKey(e.target.value)}
-            placeholder="Rainforest API key"
-            className="w-full bg-bg border border-card-border rounded px-3 py-2 text-sm text-text-primary font-mono"
-          />
-          <a
-            href="https://www.rainforestapi.com/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-accent text-xs hover:underline mt-2 inline-block"
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+        {CARDS.map((card) => (
+          <div
+            key={card.id}
+            className="bg-card border border-card-border p-4 flex flex-col gap-3"
           >
-            Get a key
-          </a>
-        </Fieldset>
-
-        <Fieldset title="Anthropic (Claude)">
-          <p className="text-text-muted text-sm mb-3">
-            Used by image batch processing to extract product identifiers from photos and screenshots.
-          </p>
-          <input
-            type="password"
-            value={anthKey}
-            onChange={(e) => setAnthKey(e.target.value)}
-            placeholder="Anthropic API key"
-            className="w-full bg-bg border border-card-border rounded px-3 py-2 text-sm text-text-primary font-mono"
-          />
-          <a
-            href="https://console.anthropic.com/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-accent text-xs hover:underline mt-2 inline-block"
-          >
-            Get a key
-          </a>
-        </Fieldset>
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-semibold text-text-primary">{card.title}</h2>
+              <span
+                className={`text-[10px] uppercase tracking-wide font-semibold px-1.5 py-0.5 rounded ${
+                  saved[card.id]
+                    ? 'bg-emerald-100 text-emerald-700'
+                    : 'bg-gray-100 text-gray-500'
+                }`}
+              >
+                {saved[card.id] ? '● Connected' : '○ Not set'}
+              </span>
+            </div>
+            <p className="text-text-muted text-xs leading-snug">{card.blurb}</p>
+            <input
+              type="password"
+              value={values[card.id]}
+              onChange={(e) => update(card.id, e.target.value)}
+              placeholder={card.placeholder}
+              className="w-full bg-bg border border-card-border rounded px-2.5 py-1.5 text-sm text-text-primary font-mono focus:outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-accent/30"
+            />
+            <a
+              href={card.helpUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-accent text-[11px] hover:underline self-start"
+            >
+              {card.helpLabel} →
+            </a>
+          </div>
+        ))}
       </div>
 
-      <div className="flex items-center gap-3 mb-8">
+      <div className="sticky bottom-0 bg-bg/95 backdrop-blur border-t border-card-border py-3 -mx-6 px-6 flex items-center gap-3">
         <button
           onClick={save}
-          disabled={!rfKey.trim() && !anthKey.trim()}
-          className="btn-gradient text-white text-sm font-medium px-4 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={!isDirty}
+          className="btn-gradient text-white text-sm font-medium px-4 py-2 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
         >
-          {savedFlash ? 'Saved!' : 'Save keys'}
+          {savedFlash ? '✓ Saved' : 'Save keys'}
         </button>
         <p className="text-xs text-text-muted">
-          Personal-use only. Keys are stored in your browser&apos;s localStorage and sent
-          directly to Rainforest and Anthropic from this page.
+          Personal-use only. Keys live in your browser&apos;s localStorage and are
+          sent directly to each provider from your device.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Fieldset title="Google Sheets">
-          <p className="text-text-muted text-sm mb-4">
-            Export your product analysis data directly to Google Sheets for easy tracking and collaboration.
-          </p>
-          <div className="flex items-center gap-3">
-            <button className="btn-gradient text-white text-sm font-medium px-4 py-2">
-              Connect to Google
-            </button>
-            <a
-              href="https://accounts.google.com/signup"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-accent text-sm hover:underline"
-            >
-              Sign-up
-            </a>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
+        <div className="bg-card border border-card-border p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm font-semibold text-text-primary">Google Sheets</h2>
+            <span className="text-[10px] uppercase tracking-wide font-semibold px-1.5 py-0.5 rounded bg-gray-100 text-gray-500">
+              ○ Coming soon
+            </span>
           </div>
-        </Fieldset>
-
-        <Fieldset title="Keepa">
-          <p className="text-text-muted text-sm mb-3">
-            Powers price-history, BSR, and offer-count charts on the result page.
+          <p className="text-text-muted text-xs leading-snug mb-3">
+            Export product analysis directly to Google Sheets for tracking and collaboration.
           </p>
-          <input
-            type="password"
-            value={keepaKey}
-            onChange={(e) => setKeepaKey2(e.target.value)}
-            placeholder="Keepa API key"
-            className="w-full bg-bg border border-card-border rounded px-3 py-2 text-sm text-text-primary font-mono"
-          />
-          <a
-            href="https://keepa.com/#!api"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-accent text-xs hover:underline mt-2 inline-block"
+          <button
+            disabled
+            className="text-sm font-medium px-3 py-1.5 border border-card-border text-text-muted cursor-not-allowed"
           >
-            Get a key
-          </a>
-        </Fieldset>
+            Connect to Google
+          </button>
+        </div>
+
+        <div className="bg-card border border-card-border p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm font-semibold text-text-primary">Watches & alerts</h2>
+            <span className="text-[10px] uppercase tracking-wide font-semibold px-1.5 py-0.5 rounded bg-gray-100 text-gray-500">
+              ○ Roadmap
+            </span>
+          </div>
+          <p className="text-text-muted text-xs leading-snug">
+            Track ASINs and get notified when price drops or BSR spikes. Hooked up
+            once Keepa integration matures.
+          </p>
+        </div>
       </div>
     </div>
   );

@@ -398,17 +398,30 @@ function ChartsPanel({ keepa }: { keepa: KeepaResultState }) {
       title="Charts"
       icon={<span className="w-3 h-3 rounded-full inline-block" style={{ backgroundColor: '#d9534f' }} />}
     >
-      {/* Range selector */}
-      <div className="flex gap-1 mb-3">
-        {WINDOW_OPTIONS.map((opt) => (
-          <button
-            key={opt.label}
-            onClick={() => setWindowDays(opt.days)}
-            className={`flex-1 text-xs py-1 border ${windowDays === opt.days ? 'bg-accent text-white border-accent' : 'border-card-border text-text-muted hover:text-accent'}`}
-          >
-            {opt.label}
-          </button>
-        ))}
+      {/* Range selector — segmented pill */}
+      <div
+        role="tablist"
+        aria-label="History window"
+        className="inline-flex p-0.5 mb-3 border border-card-border rounded-md bg-surface"
+      >
+        {WINDOW_OPTIONS.map((opt) => {
+          const active = windowDays === opt.days;
+          return (
+            <button
+              key={opt.label}
+              role="tab"
+              aria-selected={active}
+              onClick={() => setWindowDays(opt.days)}
+              className={`px-3 py-1 text-xs font-medium rounded transition-colors ${
+                active
+                  ? 'bg-card text-text-primary shadow-sm border border-card-border'
+                  : 'text-text-muted hover:text-text-primary'
+              }`}
+            >
+              {opt.label}
+            </button>
+          );
+        })}
       </div>
 
       {!keepa.isRealAsin && (
@@ -417,20 +430,7 @@ function ChartsPanel({ keepa }: { keepa: KeepaResultState }) {
         </div>
       )}
 
-      {keepa.isDemo && (
-        <div className="mb-2 flex items-center gap-2 text-[10px] text-amber-600">
-          <span className="px-1.5 py-0.5 bg-amber-100 border border-amber-300 rounded font-semibold uppercase tracking-wide">
-            Demo
-          </span>
-          <span>
-            Synthetic data — add a Keepa API key in{' '}
-            <a href="/dashboard/integrations" className="text-accent hover:underline">
-              Integrations
-            </a>{' '}
-            to load real history.
-          </span>
-        </div>
-      )}
+      {keepa.isDemo && <DemoNotice subject="price history" />}
 
       {keepa.isRealAsin && keepa.hasKey && keepa.loading && (
         <div className="w-full h-32 bg-surface border border-card-border flex items-center justify-center text-text-dim text-xs">
@@ -459,12 +459,34 @@ function ChartsPanel({ keepa }: { keepa: KeepaResultState }) {
           <KeepaStatsRow keepa={keepa} windowDays={windowDays} />
           {keepa.data.tokensLeft !== undefined && (
             <div className="mt-2 text-[10px] text-text-dim text-right">
-              Keepa tokens left: {keepa.data.tokensLeft}
+              Keepa tokens left: {keepa.data.tokensLeft.toLocaleString()}
             </div>
           )}
         </>
       )}
     </CollapsiblePanel>
+  );
+}
+
+/* ─── Demo Notice ─── */
+
+function DemoNotice({ subject }: { subject: string }) {
+  return (
+    <div className="mb-3 flex items-start gap-2 px-2.5 py-2 bg-amber-50 border border-amber-200 rounded text-xs text-amber-900">
+      <span className="shrink-0 inline-flex items-center justify-center w-4 h-4 rounded-full bg-amber-400 text-white text-[10px] font-bold">
+        !
+      </span>
+      <span className="leading-snug">
+        Showing synthetic {subject}.{' '}
+        <a
+          href="/dashboard/integrations"
+          className="font-medium text-amber-900 underline underline-offset-2 hover:text-amber-700"
+        >
+          Add a Keepa API key
+        </a>{' '}
+        to load real data from your account.
+      </span>
+    </div>
   );
 }
 
@@ -480,30 +502,89 @@ function KeepaStatsRow({
   if (!keepa.data) return null;
   const stats = computeKeepaPriceStats(keepa.data, windowDays);
   if (!stats.count) return null;
+
   const fmt = (cents: number | null) =>
     cents == null ? '—' : `$${(cents / 100).toFixed(2)}`;
   const label = windowDays == null ? 'All' : `${windowDays}d`;
-  const cells: { label: string; value: string }[] = [
-    { label: `${label} Low`, value: fmt(stats.low) },
-    { label: `${label} High`, value: fmt(stats.high) },
-    { label: `${label} Avg`, value: fmt(stats.avg) },
-    { label: 'Now', value: fmt(stats.current) },
+
+  // "Now" position within the [low, high] range — drives color hint.
+  const range = (stats.high ?? 0) - (stats.low ?? 0);
+  const positionPct =
+    range > 0 && stats.current != null && stats.low != null
+      ? Math.max(0, Math.min(1, (stats.current - stats.low) / range))
+      : 0.5;
+  const nowTone =
+    positionPct < 0.34
+      ? { ring: 'border-emerald-300', tint: 'bg-emerald-50', text: 'text-emerald-700', label: 'Near low' }
+      : positionPct > 0.66
+        ? { ring: 'border-rose-300', tint: 'bg-rose-50', text: 'text-rose-700', label: 'Near high' }
+        : { ring: 'border-amber-300', tint: 'bg-amber-50', text: 'text-amber-700', label: 'Mid' };
+
+  // Trend: compare avg of first vs second half of the active window.
+  const series = keepa.data.series.newPrice.length
+    ? keepa.data.series.newPrice
+    : keepa.data.series.buyBox.length
+      ? keepa.data.series.buyBox
+      : keepa.data.series.amazon;
+  const cutoff =
+    windowDays == null ? -Infinity : Date.now() - windowDays * 24 * 60 * 60 * 1000;
+  const inWindow = series.filter((p) => p.ts >= cutoff);
+  let trendPct = 0;
+  if (inWindow.length >= 4) {
+    const half = Math.floor(inWindow.length / 2);
+    const a = inWindow.slice(0, half).reduce((s, p) => s + p.value, 0) / half;
+    const b =
+      inWindow.slice(half).reduce((s, p) => s + p.value, 0) / (inWindow.length - half);
+    if (a > 0) trendPct = ((b - a) / a) * 100;
+  }
+  const trendIcon = trendPct > 1 ? '▲' : trendPct < -1 ? '▼' : '→';
+  const trendClass =
+    trendPct > 1 ? 'text-rose-600' : trendPct < -1 ? 'text-emerald-600' : 'text-text-muted';
+
+  const cells = [
+    { label: `${label} Low`, value: fmt(stats.low), accent: '#10b981' },
+    { label: `${label} High`, value: fmt(stats.high), accent: '#ef4444' },
+    { label: `${label} Avg`, value: fmt(stats.avg), accent: '#9ca3af' },
   ];
+
   return (
     <div className="mt-3 grid grid-cols-4 gap-2">
       {cells.map((c) => (
         <div
           key={c.label}
-          className="border border-card-border px-2 py-1.5 bg-surface"
+          className="border border-card-border px-2 py-1.5 bg-card"
         >
-          <div className="text-[10px] uppercase tracking-wide text-text-dim">
-            {c.label}
+          <div className="flex items-center gap-1.5">
+            <span
+              className="w-1 h-3 rounded-sm inline-block"
+              style={{ background: c.accent }}
+            />
+            <span className="text-[10px] uppercase tracking-wide text-text-dim">
+              {c.label}
+            </span>
           </div>
-          <div className="text-sm font-semibold text-text-primary tabular-nums">
+          <div className="text-sm font-semibold text-text-primary tabular-nums mt-0.5">
             {c.value}
           </div>
         </div>
       ))}
+      {/* Now cell with tone + trend */}
+      <div
+        className={`border ${nowTone.ring} ${nowTone.tint} px-2 py-1.5`}
+        title={nowTone.label}
+      >
+        <div className="flex items-center justify-between">
+          <span className={`text-[10px] uppercase tracking-wide font-semibold ${nowTone.text}`}>
+            Now
+          </span>
+          <span className={`text-[10px] tabular-nums ${trendClass}`} aria-label="trend">
+            {trendIcon} {Math.abs(trendPct).toFixed(1)}%
+          </span>
+        </div>
+        <div className="text-sm font-semibold text-text-primary tabular-nums mt-0.5">
+          {fmt(stats.current)}
+        </div>
+      </div>
     </div>
   );
 }
@@ -531,14 +612,7 @@ function VariationsPanel({
       title={badge ? `Variations (${badge})` : 'Variations'}
       icon={<span className="w-3 h-3 rounded-full inline-block" style={{ backgroundColor: '#10b981' }} />}
     >
-      {keepa.isDemo && (
-        <div className="mb-2 flex items-center gap-2 text-[10px] text-amber-600">
-          <span className="px-1.5 py-0.5 bg-amber-100 border border-amber-300 rounded font-semibold uppercase tracking-wide">
-            Demo
-          </span>
-          <span>Synthetic variations.</span>
-        </div>
-      )}
+      {keepa.isDemo && <DemoNotice subject="variations" />}
       {keepa.loading && (
         <div className="text-text-dim text-xs">Loading variations...</div>
       )}
