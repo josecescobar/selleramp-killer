@@ -1,8 +1,7 @@
 import type { Alert } from '@shared/types/alerts';
 import type { Product } from '@shared/types/product';
 import type { BuyBoxInfo, Offer } from '@shared/types/offers';
-import type { BsrInfo } from '@shared/types/messages';
-import { getSnapshots } from '../storage';
+import type { BsrInfo, PriceSnapshot } from '@shared/types/messages';
 
 export interface AlertInput {
   product: Product;
@@ -11,6 +10,10 @@ export interface AlertInput {
   bsr: BsrInfo;
   sellPriceCents: number;
   asin: string;
+}
+
+export interface AlertDeps {
+  getSnapshots?: (asin: string) => Promise<PriceSnapshot[]>;
 }
 
 const COMMONLY_GATED_BRANDS = [
@@ -33,8 +36,12 @@ const COMMONLY_GATED_BRANDS = [
   'nikon',
 ];
 
-export async function generateAlerts(input: AlertInput): Promise<Alert[]> {
-  const volatilityAlert = await priceVolatilityAlert(input.asin);
+export async function generateAlerts(
+  input: AlertInput,
+  deps: AlertDeps = {},
+): Promise<Alert[]> {
+  const getSnaps = deps.getSnapshots ?? (async () => []);
+  const volatilityAlert = await priceVolatilityAlert(input.asin, getSnaps);
 
   return [
     brandGatingAlert(input.product),
@@ -147,7 +154,10 @@ function adultAlert(product: Product): Alert {
   };
 }
 
-async function priceVolatilityAlert(asin: string): Promise<Alert> {
+async function priceVolatilityAlert(
+  asin: string,
+  getSnapshots: (asin: string) => Promise<PriceSnapshot[]>,
+): Promise<Alert> {
   const snapshots = await getSnapshots(asin);
   const prices = snapshots.map((s) => s.price);
 

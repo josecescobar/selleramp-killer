@@ -4,9 +4,17 @@ interface HeaderProps {
   expanded: boolean;
   onToggleExpand: () => void;
   onOpenSettings: () => void;
+  mode: 'product' | 'batch';
+  onToggleMode: () => void;
 }
 
-export function Header({ expanded, onToggleExpand, onOpenSettings }: HeaderProps) {
+export function Header({
+  expanded,
+  onToggleExpand,
+  onOpenSettings,
+  mode: appMode,
+  onToggleMode,
+}: HeaderProps) {
   const { tokens: t, toggle: toggleTheme, mode } = useTheme();
 
   return (
@@ -61,6 +69,23 @@ export function Header({ expanded, onToggleExpand, onOpenSettings }: HeaderProps
         </span>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        <button
+          onClick={onToggleMode}
+          title={appMode === 'batch' ? 'Switch to product view' : 'Open batch image analysis'}
+          style={{
+            background: appMode === 'batch' ? t.accent : 'none',
+            border: `1px solid ${appMode === 'batch' ? t.accent : t.border}`,
+            borderRadius: 6,
+            color: appMode === 'batch' ? '#fff' : t.textMuted,
+            fontSize: 10,
+            fontWeight: 700,
+            padding: '3px 8px',
+            cursor: 'pointer',
+            fontFamily: 'inherit',
+          }}
+        >
+          Batch
+        </button>
         <button
           onClick={toggleTheme}
           style={{

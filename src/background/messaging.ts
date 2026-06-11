@@ -55,6 +55,36 @@ export function handleMessage(
       });
       break;
 
+    case 'SET_ANTHROPIC_KEY':
+      chrome.storage.local.set(
+        { 'settings:anthropicApiKey': message.apiKey },
+        () => {
+          sendResponse({ success: true });
+        },
+      );
+      break;
+
+    case 'GET_ANTHROPIC_KEY_STATUS':
+      chrome.storage.local.get('settings:anthropicApiKey', (result) => {
+        sendResponse({ success: true, hasKey: !!result['settings:anthropicApiKey'] });
+      });
+      break;
+
+    case 'SET_KEEPA_KEY':
+      chrome.storage.local.set(
+        { 'settings:keepaApiKey': message.apiKey },
+        () => {
+          sendResponse({ success: true });
+        },
+      );
+      break;
+
+    case 'GET_KEEPA_KEY_STATUS':
+      chrome.storage.local.get('settings:keepaApiKey', (result) => {
+        sendResponse({ success: true, hasKey: !!result['settings:keepaApiKey'] });
+      });
+      break;
+
     case 'GET_PRODUCT_HISTORY':
       getSnapshots(message.asin)
         .then((snapshots) => sendResponse({ success: true, data: snapshots }))

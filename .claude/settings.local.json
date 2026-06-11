@@ -4,7 +4,11 @@
       "WebSearch",
       "WebFetch(domain:docs.trajectdata.com)",
       "WebFetch(domain:www.rainforestapi.com)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(rm -rf /home/user/selleramp-killer/website/out/.git)",
+      "Bash(git -C /home/user/selleramp-killer/website/out remote -v)",
+      "Bash(git -C /home/user/selleramp-killer ls-remote origin 'refs/heads/gh-pages')",
+      "Bash(git -C /home/user/selleramp-killer status --short)"
     ]
   }
 }
