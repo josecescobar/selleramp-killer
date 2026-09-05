@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { AnalysisResult } from '@shared/types/messages';
+import { AMAZON_PRODUCT_URL_PATTERN } from '@shared/constants';
 
 export interface AnalysisState {
   data: AnalysisResult | null;
@@ -8,6 +9,16 @@ export interface AnalysisState {
   asin: string | null;
   hasApiKey: boolean;
   refetch: () => void;
+}
+
+function extractAsinFromUrl(url: string): string | null {
+  try {
+    const { pathname } = new URL(url);
+    const match = pathname.match(AMAZON_PRODUCT_URL_PATTERN);
+    return match ? match[1] : null;
+  } catch {
+    return null;
+  }
 }
 
 export function useProductAnalysis(): AnalysisState {
@@ -40,6 +51,66 @@ export function useProductAnalysis(): AnalysisState {
     };
     chrome.storage.session.onChanged.addListener(listener);
     return () => chrome.storage.session.onChanged.removeListener(listener);
+  }, []);
+
+  // Fallback: detect ASIN from active tab URL (handles cases where
+  // content script hasn't run yet, e.g. extension just loaded)
+  useEffect(() => {
+    if (asin) return; // Already have an ASIN, no need for fallback
+
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      const tab = tabs[0];
+      if (tab?.url) {
+        const detected = extractAsinFromUrl(tab.url);
+        if (detected) setAsin(detected);
+      }
+    });
+  }, [asin]);
+
+  // Listen for tab activation and URL changes to detect new products
+  useEffect(() => {
+    const handleActivated = (info: chrome.tabs.TabActiveInfo) => {
+      chrome.tabs.get(info.tabId, (tab) => {
+        if (tab?.url) {
+          const detected = extractAsinFromUrl(tab.url);
+          if (detected) {
+            setAsin(detected);
+            setData(null);
+            setError(null);
+          } else {
+            setAsin(null);
+            setData(null);
+            setError(null);
+          }
+        }
+      });
+    };
+
+    const handleUpdated = (
+      _tabId: number,
+      changeInfo: chrome.tabs.TabChangeInfo,
+      tab: chrome.tabs.Tab,
+    ) => {
+      if (changeInfo.url && tab.active) {
+        const detected = extractAsinFromUrl(changeInfo.url);
+        if (detected) {
+          setAsin(detected);
+          setData(null);
+          setError(null);
+        } else {
+          setAsin(null);
+          setData(null);
+          setError(null);
+        }
+      }
+    };
+
+    chrome.tabs.onActivated.addListener(handleActivated);
+    chrome.tabs.onUpdated.addListener(handleUpdated);
+    return () => {
+      chrome.tabs.onActivated.removeListener(handleActivated);
+      chrome.tabs.onUpdated.removeListener(handleUpdated);
+    };
   }, []);
 
   const fetchAnalysis = useCallback((targetAsin: string) => {

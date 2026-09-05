@@ -14,10 +14,18 @@ export function mapProduct(
   marketplace: Marketplace,
 ): Product {
   const p = raw.product;
-  const category =
+  // Skip generic top-level categories like "All Departments"
+  const rawCategory =
+    p.categories?.find(
+      (c) => c.name && !/^all\s/i.test(c.name),
+    )?.name ??
+    p.categories_flat
+      ?.split('/')
+      .map((s) => s.trim())
+      .find((s) => s && !/^all\s/i.test(s)) ??
     p.categories?.[0]?.name ??
-    p.categories_flat?.split('/')[0]?.trim() ??
     'Unknown';
+  const category = rawCategory;
   const { weightGrams, dimensions } = parseDimensions(
     p.weight,
     p.dimensions,
@@ -117,10 +125,10 @@ export function mapBsr(raw: RainforestProductResponse): BsrInfo {
 export function mapSalesEstimate(
   raw: RainforestSalesEstimationResponse,
 ): SalesEstimate {
-  const monthly = raw.sales_estimation.monthly_sales_estimation;
+  const monthly = raw.sales_estimation?.monthly_sales_estimation ?? 0;
   return {
     monthlySales: monthly,
-    confidence: 70,
+    confidence: monthly > 0 ? 70 : 0,
     range: {
       low: Math.round(monthly * 0.7),
       high: Math.round(monthly * 1.3),

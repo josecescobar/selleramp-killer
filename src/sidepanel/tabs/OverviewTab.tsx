@@ -110,9 +110,12 @@ export function OverviewTab({ data }: OverviewTabProps) {
           <div style={{ display: 'flex', gap: 6, marginTop: 3, alignItems: 'center' }}>
             <span style={{ fontSize: 10, color: t.textMuted }}>{data.product.asin}</span>
             <span style={{ fontSize: 10, color: t.textDim }}>{data.product.brand}</span>
-            {data.product.rating && (
+            {data.product.rating != null && (
               <span style={{ fontSize: 10, color: t.yellow }}>
-                {'\u2605'} {data.product.rating}
+                {'\u2605'} {data.product.rating.toFixed(1)}
+                {data.product.reviewCount != null && (
+                  <span style={{ color: t.textDim }}> ({formatNumber(data.product.reviewCount)})</span>
+                )}
               </span>
             )}
           </div>
@@ -288,8 +291,16 @@ export function OverviewTab({ data }: OverviewTabProps) {
         <MetricBox label="BSR" value={formatNumber(data.bsr.rank)} sub={data.bsr.category} />
         <MetricBox
           label="Est. Sales"
-          value={`${data.salesEstimate.monthlySales}/mo`}
-          sub={`${data.salesEstimate.confidence}% conf.`}
+          value={
+            data.salesEstimate.monthlySales > 0
+              ? `${formatNumber(data.salesEstimate.monthlySales)}/mo`
+              : 'N/A'
+          }
+          sub={
+            data.salesEstimate.confidence > 0
+              ? `${data.salesEstimate.confidence}% conf.`
+              : ''
+          }
         />
         <MetricBox label="Max Cost" value={formatCurrency(maxCost)} />
       </div>

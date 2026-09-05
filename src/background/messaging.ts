@@ -65,6 +65,9 @@ async function handleAnalyzeProduct(
   marketplace: string,
   url: string,
 ): Promise<AnalyzeProductResponse> {
+  // Set ASIN immediately so sidepanel knows we're on a product page
+  await setSession('session:currentAsin', asin);
+
   // Check full analysis cache first
   const cached = await getFromCache<AnalysisResult>(`analysis:${asin}`);
   if (cached) {
