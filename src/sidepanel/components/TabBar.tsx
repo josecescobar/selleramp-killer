@@ -5,7 +5,7 @@ const TABS: { id: TabId; label: string; icon: string }[] = [
   { id: 'overview', label: 'Overview', icon: '\u26A1' },
   { id: 'offers', label: 'Offers', icon: '\uD83C\uDFF7\uFE0F' },
   { id: 'alerts', label: 'Alerts', icon: '\uD83D\uDEE1\uFE0F' },
-  { id: 'history', label: 'History', icon: '\uD83D\uDCC8' },
+  { id: 'buylist', label: 'Buy List', icon: '\uD83D\uDED2' },
   { id: 'ebay', label: 'eBay', icon: '\uD83D\uDD04' },
 ];
 

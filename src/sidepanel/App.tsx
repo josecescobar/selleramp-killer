@@ -5,12 +5,13 @@ import { TabBar } from './components/TabBar';
 import { OverviewTab } from './tabs/OverviewTab';
 import { OffersTab } from './tabs/OffersTab';
 import { AlertsTab } from './tabs/AlertsTab';
-import { HistoryTab } from './tabs/HistoryTab';
+import { BuyListTab } from './tabs/BuyListTab';
 import { EbayTab } from './tabs/EbayTab';
 import { ApiKeySetup } from './components/ApiKeySetup';
 import { useProductAnalysis } from './hooks/useProductAnalysis';
+import { useBuyList } from './hooks/useBuyList';
 
-export type TabId = 'overview' | 'offers' | 'alerts' | 'history' | 'ebay';
+export type TabId = 'overview' | 'offers' | 'alerts' | 'buylist' | 'ebay';
 
 export function App() {
   const { tokens: t } = useTheme();
@@ -18,6 +19,7 @@ export function App() {
   const [expanded, setExpanded] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const analysis = useProductAnalysis();
+  const buyList = useBuyList();
 
   return (
     <div
@@ -191,13 +193,17 @@ export function App() {
             </div>
           )}
 
+        {/* Buy List tab — accessible without a loaded product */}
+        {!showSettings && activeTab === 'buylist' && (
+          <BuyListTab buyList={buyList} />
+        )}
+
         {/* Data loaded - show tabs */}
         {!showSettings && analysis.data && !analysis.loading && !analysis.error && (
           <>
-            {activeTab === 'overview' && <OverviewTab data={analysis.data} />}
+            {activeTab === 'overview' && <OverviewTab data={analysis.data} buyList={buyList} />}
             {activeTab === 'offers' && <OffersTab data={analysis.data} />}
             {activeTab === 'alerts' && <AlertsTab data={analysis.data} />}
-            {activeTab === 'history' && <HistoryTab data={analysis.data} />}
             {activeTab === 'ebay' && <EbayTab data={analysis.data} />}
           </>
         )}

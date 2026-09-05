@@ -10,3 +10,15 @@ export interface UserSettings {
   targetRoi: number;
   autoOpenPanel: boolean;
 }
+
+export interface BuyListItem {
+  asin: string;
+  title: string;
+  imageUrl?: string;
+  buyPriceCents: number;
+  sellPriceCents: number;
+  profitCents: number;
+  roi: number;
+  score: number;
+  addedAt: number;
+}

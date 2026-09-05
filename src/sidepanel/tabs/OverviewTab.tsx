@@ -5,12 +5,14 @@ import { ScoreBadge } from '../components/ScoreBadge';
 import { SectionHeader } from '../components/SectionHeader';
 import { formatCurrency, formatPercent, formatNumber } from '@shared/utils';
 import type { AnalysisResult } from '@shared/types/messages';
+import type { BuyListState } from '../hooks/useBuyList';
 
 interface OverviewTabProps {
   data: AnalysisResult;
+  buyList: BuyListState;
 }
 
-export function OverviewTab({ data }: OverviewTabProps) {
+export function OverviewTab({ data, buyList }: OverviewTabProps) {
   const { tokens: t } = useTheme();
   const [fulfillment, setFulfillment] = useState<'FBA' | 'FBM'>('FBA');
 
@@ -362,22 +364,55 @@ export function OverviewTab({ data }: OverviewTabProps) {
 
       {/* Action Buttons */}
       <div style={{ display: 'flex', gap: 6 }}>
-        <button
-          style={{
-            flex: 1,
-            padding: '8px 0',
-            fontSize: 12,
-            fontWeight: 700,
-            color: '#fff',
-            background: t.green,
-            border: 'none',
-            borderRadius: 8,
-            cursor: 'pointer',
-            fontFamily: 'inherit',
-          }}
-        >
-          + Add to Buy List
-        </button>
+        {buyList.isInList(data.product.asin) ? (
+          <button
+            onClick={() => buyList.removeItem(data.product.asin)}
+            style={{
+              flex: 1,
+              padding: '8px 0',
+              fontSize: 12,
+              fontWeight: 700,
+              color: t.green,
+              background: t.greenBg,
+              border: `1px solid ${t.green}`,
+              borderRadius: 8,
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+            }}
+          >
+            {'\u2713'} In Buy List
+          </button>
+        ) : (
+          <button
+            onClick={() =>
+              buyList.addItem({
+                asin: data.product.asin,
+                title: data.product.title,
+                imageUrl: data.product.imageUrl,
+                buyPriceCents,
+                sellPriceCents,
+                profitCents,
+                roi,
+                score: data.dealScore.score,
+                addedAt: Date.now(),
+              })
+            }
+            style={{
+              flex: 1,
+              padding: '8px 0',
+              fontSize: 12,
+              fontWeight: 700,
+              color: '#fff',
+              background: t.green,
+              border: 'none',
+              borderRadius: 8,
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+            }}
+          >
+            + Add to Buy List
+          </button>
+        )}
         <button
           style={{
             padding: '8px 12px',
