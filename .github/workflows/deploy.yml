@@ -12,8 +12,12 @@ permissions:
   id-token: write
 
 concurrency:
-  group: pages-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  # Pull-request builds stay isolated per ref and may cancel a stale run.
+  # Every push and manual dispatch shares one group so two deploys cannot
+  # overlap on the github-pages environment, and an in-progress deploy is
+  # not cancelled.
+  group: ${{ github.event_name == 'pull_request' && format('pages-{0}-{1}', github.workflow, github.ref) || 'pages-deployment' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   build:
